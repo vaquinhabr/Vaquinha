@@ -1,4 +1,41 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { supabase } from "../../lib/supabase";
+
 export default function CriarConta() {
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [carregando, setCarregando] = useState(false);
+
+  async function cadastrar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setMensagem("");
+    setCarregando(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: senha,
+      options: {
+        data: { full_name: nome },
+      },
+    });
+
+    setCarregando(false);
+
+    if (error) {
+      setMensagem(error.message);
+      return;
+    }
+
+    setMensagem(
+      "Cadastro realizado! Confira seu e-mail para confirmar sua conta."
+    );
+  }
+
   return (
     <main style={{
       maxWidth: "420px",
@@ -8,69 +45,67 @@ export default function CriarConta() {
       color: "#172033"
     }}>
       <h1>Criar conta</h1>
-      <p>Cadastre-se para começar sua jornada na Vaquinha.</p>
+      <p>Cadastre-se para começar sua jornada.</p>
 
-      <form>
-        <label htmlFor="nome">Nome completo</label>
+      <form onSubmit={cadastrar}>
+        <label>Nome completo</label>
         <input
-          id="nome"
-          type="text"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          required
           placeholder="Seu nome"
-          required
-          style={{
-            display: "block",
-            width: "100%",
-            padding: "12px",
-            margin: "8px 0 18px",
-            boxSizing: "border-box"
-          }}
+          style={estilo}
         />
 
-        <label htmlFor="email">E-mail</label>
+        <label>E-mail</label>
         <input
-          id="email"
           type="email"
-          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
-          style={{
-            display: "block",
-            width: "100%",
-            padding: "12px",
-            margin: "8px 0 18px",
-            boxSizing: "border-box"
-          }}
+          placeholder="seu@email.com"
+          style={estilo}
         />
 
-        <label htmlFor="senha">Criar senha</label>
+        <label>Senha</label>
         <input
-          id="senha"
           type="password"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          required
           minLength={8}
           placeholder="Mínimo de 8 caracteres"
-          required
-          style={{
-            display: "block",
-            width: "100%",
-            padding: "12px",
-            margin: "8px 0 18px",
-            boxSizing: "border-box"
-          }}
+          style={estilo}
         />
 
-        <button type="submit" style={{
-          width: "100%",
-          padding: "14px",
-          background: "#16a34a",
-          color: "white",
-          border: 0,
-          borderRadius: "8px"
-        }}>
-          Criar minha conta
+        <button
+          type="submit"
+          disabled={carregando}
+          style={{
+            ...estilo,
+            background: "#16a34a",
+            color: "white",
+            border: 0,
+            fontWeight: "bold"
+          }}
+        >
+          {carregando ? "Cadastrando..." : "Criar minha conta"}
         </button>
       </form>
 
-      <p>Já tem conta? <a href="/entrar">Entrar</a></p>
-      <a href="/">Voltar ao início</a>
+      {mensagem && <p>{mensagem}</p>}
+
+      <p>Já tem conta? <Link href="/entrar">Entrar</Link></p>
+      <Link href="/">Voltar ao início</Link>
     </main>
   );
 }
+
+const estilo: React.CSSProperties = {
+  display: "block",
+  width: "100%",
+  padding: "12px",
+  margin: "8px 0 18px",
+  boxSizing: "border-box",
+  borderRadius: "8px",
+};
