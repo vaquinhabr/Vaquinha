@@ -21,10 +21,16 @@ export default function CampanhaDetalhe() {
     let ativo = true;
     async function carregar() {
       try {
-        const { data, error } = await supabase.from("campaigns").select("*").or(`id.eq.${id},slug.eq.${id}`).single();
+        let data: Campaign | null = null;
+        const bySlug = await supabase.from("campaigns").select("*").eq("slug", id).maybeSingle();
+        if (bySlug.data) data = bySlug.data as Campaign;
+        if (!data && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+          const byId = await supabase.from("campaigns").select("*").eq("id", id).maybeSingle();
+          if (byId.data) data = byId.data as Campaign;
+        }
         if (!ativo) return;
-        if (error || !data) setErro("Campanha não encontrada ou ainda não disponível publicamente.");
-        else setCampanha(data as Campaign);
+        if (!data) setErro("Campanha não encontrada ou ainda não disponível publicamente.");
+        else setCampanha(data);
       } catch {
         if (ativo) setErro("Não foi possível carregar esta campanha agora.");
       } finally {
