@@ -45,7 +45,6 @@ export default function CampanhaDetalhe() {
 
   if (erro || !campanha) return <div className="page-shell"><Header /><main className="container" style={{ padding: "70px 20px", textAlign: "center" }}><div aria-hidden="true" style={{ fontSize: 48 }}>🌱</div><h1>Não encontramos essa campanha.</h1><p className="muted">{erro || "Tente novamente."}</p><Link href="/campanhas" className="btn btn-primary" style={{ marginTop: 12 }}>Explorar campanhas</Link></main></div>;
 
-  const percentual = 0;
   const ativa = campanha.status === "active";
 
   return (
@@ -60,7 +59,6 @@ export default function CampanhaDetalhe() {
           <div style={{ padding: "clamp(24px, 5vw, 42px)" }}>
             <span className="eyebrow">{categoryLabel[campanha.category] || "Uma causa importante"}</span>
             <h1 style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)", lineHeight: 1.12, margin: "16px 0 20px" }}>{campanha.title}</h1>
-            <div style={{ background: "#edf1ed", height: 9, borderRadius: 999, overflow: "hidden" }}><div style={{ width: `${percentual}%`, height: "100%", background: "var(--green-600)" }} /></div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", color: "var(--muted)", fontSize: 13, marginTop: 10 }}><span>Meta da campanha</span><strong style={{ color: "var(--green-900)", fontSize: 16 }}>{dinheiro(Number(campanha.goal_cents))}</strong></div>
             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.85, color: "#3f5147", margin: "28px 0 32px" }}>{campanha.description}</div>
             {ativa ? (
