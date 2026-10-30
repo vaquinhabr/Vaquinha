@@ -19,17 +19,11 @@ export default function CriarConta() {
     setCarregando(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password: senha,
-        options: {
-          data: {
-            full_name: nome.trim(),
-          },
-        },
+        options: { data: { full_name: nome.trim(), display_name: nome.trim() } },
       });
-
-      setCarregando(false);
 
       if (error) {
         setMensagem(traduzirErro(error.message));
@@ -37,132 +31,53 @@ export default function CriarConta() {
       }
 
       setSucesso(true);
-      setMensagem(
-        "Cadastro realizado! Verifique seu e-mail para confirmar a conta."
-      );
+      setMensagem("Cadastro iniciado! Se a confirmação por e-mail estiver ativa, confira sua caixa de entrada para ativar a conta.");
       setNome("");
       setEmail("");
       setSenha("");
-    } catch (err) {
+    } catch {
+      setMensagem("Não foi possível concluir o cadastro agora. Confira a conexão e tente novamente.");
+    } finally {
       setCarregando(false);
-      setMensagem("Erro inesperado. Tente novamente.");
     }
   }
 
   return (
-    <main
-      style={{
-        maxWidth: "420px",
-        margin: "50px auto",
-        padding: "24px",
-        fontFamily: "Arial, sans-serif",
-        color: "#172033",
-      }}
-    >
-      <h1 style={{ color: "#16a34a" }}>Criar conta</h1>
-      <p>Cadastre-se para começar sua jornada.</p>
+    <main className="container" style={{ paddingTop: 1, paddingBottom: 48 }}>
+      <div className="card form-card">
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--green-800)", fontWeight: 700, fontSize: 14, marginBottom: 26 }}>← Voltar ao início</Link>
+        <div className="eyebrow">Sua história começa aqui</div>
+        <h1 className="form-title" style={{ marginTop: 14 }}>Crie sua conta.</h1>
+        <p className="form-intro">Prepare o primeiro passo para reunir pessoas em torno da sua causa.</p>
 
-      <form onSubmit={cadastrar}>
-        <label htmlFor="nome">Nome completo</label>
-        <input
-          id="nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          required
-          placeholder="Seu nome"
-          autoComplete="name"
-          style={estilo}
-        />
+        <form onSubmit={cadastrar}>
+          <label className="form-label" htmlFor="nome">Nome completo</label>
+          <input className="form-control" id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={100} placeholder="Como podemos te chamar?" autoComplete="name" />
 
-        <label htmlFor="email">E-mail</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          placeholder="seu@email.com"
-          autoComplete="email"
-          style={estilo}
-        />
+          <label className="form-label" htmlFor="email">E-mail</label>
+          <input className="form-control" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={254} placeholder="voce@exemplo.com.br" autoComplete="email" />
 
-        <label htmlFor="senha">Senha</label>
-        <input
-          id="senha"
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          required
-          minLength={8}
-          placeholder="Mínimo de 8 caracteres"
-          autoComplete="new-password"
-          style={estilo}
-        />
+          <label className="form-label" htmlFor="senha">Crie uma senha</label>
+          <input className="form-control" id="senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={8} maxLength={72} placeholder="Pelo menos 8 caracteres" autoComplete="new-password" />
 
-        <button
-          type="submit"
-          disabled={carregando}
-          style={{
-            ...estilo,
-            background: "#16a34a",
-            color: "white",
-            border: 0,
-            fontWeight: "bold",
-            cursor: carregando ? "not-allowed" : "pointer",
-            opacity: carregando ? 0.7 : 1,
-          }}
-        >
-          {carregando ? "Cadastrando..." : "Criar minha conta"}
-        </button>
-      </form>
+          <button className="btn btn-primary form-submit" type="submit" disabled={carregando}>{carregando ? "Criando sua conta..." : "Criar minha conta ↗"}</button>
+        </form>
 
-      {mensagem && (
-        <p
-          style={{
-            marginTop: "16px",
-            padding: "12px",
-            background: sucesso ? "#f0fdf4" : "#fef2f2",
-            color: sucesso ? "#166534" : "#b91c1c",
-            borderRadius: "8px",
-            fontSize: "14px",
-          }}
-        >
-          {mensagem}
-        </p>
-      )}
-
-      <p style={{ marginTop: "24px" }}>
-        Já tem conta?{" "}
-        <Link href="/entrar" style={{ color: "#16a34a" }}>
-          Entrar
-        </Link>
-      </p>
-      <Link href="/" style={{ color: "#64748b", fontSize: "14px" }}>
-        Voltar ao início
-      </Link>
+        {mensagem && <p role="status" aria-live="polite" className={`form-message ${sucesso ? "form-message-success" : "form-message-error"}`} style={{ marginTop: 18 }}>{mensagem}</p>}
+        <p style={{ margin: "24px 0 0", textAlign: "center", fontSize: 14, color: "var(--muted)" }}>Já tem uma conta? <Link href="/entrar" style={{ color: "var(--green-800)", fontWeight: 700 }}>Entrar</Link></p>
+        <p style={{ margin: "22px 0 0", textAlign: "center", color: "#8a968e", fontSize: 12, lineHeight: 1.6 }}>Cuide bem dos seus dados e nunca compartilhe sua senha.</p>
+      </div>
     </main>
   );
 }
 
 function traduzirErro(msg: string): string {
   const mapa: Record<string, string> = {
-    "User already registered": "Este e-mail já está cadastrado.",
-    "Password should be at least 6 characters":
-      "A senha deve ter pelo menos 6 caracteres.",
-    "Invalid path specified in request URL.":
-      "Erro de configuração do Supabase. Verifique as variáveis de ambiente na Vercel.",
-    "Unable to validate email address: invalid format":
-      "Formato de e-mail inválido.",
+    "User already registered": "Este e-mail já está cadastrado. Tente entrar na sua conta.",
+    "Password should be at least 6 characters": "A senha precisa ter pelo menos 8 caracteres.",
+    "Invalid path specified in request URL.": "A configuração do Supabase está incorreta. Verifique a URL e a chave pública configuradas na Vercel.",
+    "Unable to validate email address: invalid format": "Confira se o e-mail foi digitado corretamente.",
+    "Signup is disabled": "O cadastro está temporariamente desativado. Tente novamente mais tarde.",
   };
-  return mapa[msg] || msg;
+  return mapa[msg] || "Não foi possível criar a conta. Verifique os dados e tente novamente.";
 }
-
-const estilo: React.CSSProperties = {
-  display: "block",
-  width: "100%",
-  padding: "12px",
-  margin: "8px 0 18px",
-  boxSizing: "border-box",
-  borderRadius: "8px",
-  border: "1px solid #e2e8f0",
-};
