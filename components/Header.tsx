@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function Header() {
   const router = useRouter();
@@ -11,102 +11,57 @@ export default function Header() {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
+      if (mounted) {
+        setUser(data.session?.user ?? null);
+        setCarregando(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
       setCarregando(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function sair() {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) return;
     setUser(null);
     router.push("/");
     router.refresh();
   }
 
   return (
-    <header
-      style={{
-        background: "#ffffff",
-        padding: "16px 24px",
-        borderBottom: "1px solid #e5e7eb",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "12px",
-      }}
-    >
-      <Link
-        href="/"
-        style={{
-          color: "#16a34a",
-          textDecoration: "none",
-          fontWeight: "bold",
-          fontSize: "20px",
-        }}
-      >
-        💚 Vaquinha
-      </Link>
-
-      <nav style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-        <Link href="/campanhas" style={{ color: "#166534", textDecoration: "none" }}>
-          Campanhas
+    <header style={{ position: "sticky", top: 0, zIndex: 30, background: "rgba(255,255,255,.94)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--line)" }}>
+      <div className="container" style={{ minHeight: 76, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+        <Link href="/" aria-label="Vaquinha - página inicial" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--green-950)" }}>
+          <span aria-hidden="true" style={{ display: "grid", placeItems: "center", width: 40, height: 40, borderRadius: 14, background: "var(--green-100)", fontSize: 22 }}>💚</span>
+          <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-.06em" }}>Vaquinha<span style={{ color: "var(--green-700)" }}>.</span></span>
         </Link>
 
-        {carregando ? (
-          <span style={{ color: "#94a3b8", fontSize: "14px" }}>...</span>
-        ) : user ? (
-          <>
-            <Link
-              href="/painel"
-              style={{ color: "#166534", textDecoration: "none" }}
-            >
-              Meu painel
-            </Link>
-            <button
-              onClick={sair}
-              style={{
-                background: "transparent",
-                border: "1px solid #e2e8f0",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                color: "#64748b",
-              }}
-            >
-              Sair
-            </button>
-          </>
-        ) : (
-          <>
-            <Link href="/entrar" style={{ color: "#166534", textDecoration: "none" }}>
-              Entrar
-            </Link>
-            <Link
-              href="/criar-conta"
-              style={{
-                background: "#16a34a",
-                color: "#fff",
-                padding: "8px 16px",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
-            >
-              Criar conta
-            </Link>
-          </>
-        )}
-      </nav>
+        <nav aria-label="Navegação principal" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 20, flexWrap: "wrap" }}>
+          <Link href="/campanhas" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Explorar campanhas</Link>
+          {!carregando && (user ? (
+            <>
+              <Link href="/painel" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Meu painel</Link>
+              <button type="button" onClick={sair} className="btn btn-secondary" style={{ minHeight: 40, padding: "9px 15px", fontSize: 14 }}>Sair</button>
+            </>
+          ) : (
+            <>
+              <Link href="/entrar" className="hide-mobile" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 700 }}>Entrar</Link>
+              <Link href="/criar-conta" className="btn btn-primary" style={{ minHeight: 42, padding: "10px 17px", fontSize: 14 }}>Criar vaquinha <span aria-hidden="true">↗</span></Link>
+            </>
+          ))}
+        </nav>
+      </div>
     </header>
   );
 }
