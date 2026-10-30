@@ -16,108 +16,42 @@ export default function Entrar() {
     e.preventDefault();
     setMensagem("");
     setCarregando(true);
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: senha,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
       if (error) {
         setMensagem(traduzirErro(error.message));
-        setCarregando(false);
         return;
       }
-
       if (data.session) {
-        router.push("/painel");
+        router.replace("/painel");
         router.refresh();
+      } else {
+        setMensagem("Não foi possível iniciar sua sessão. Tente novamente.");
       }
-    } catch (err) {
-      setMensagem("Erro inesperado. Tente novamente.");
+    } catch {
+      setMensagem("Não foi possível entrar agora. Confira a conexão e tente novamente.");
+    } finally {
       setCarregando(false);
     }
   }
 
   return (
-    <main
-      style={{
-        maxWidth: "420px",
-        margin: "50px auto",
-        padding: "24px",
-        fontFamily: "Arial, sans-serif",
-        color: "#172033",
-      }}
-    >
-      <h1 style={{ color: "#16a34a" }}>Entrar na Vaquinha</h1>
-      <p>Acesse sua conta para acompanhar suas campanhas.</p>
-
-      <form onSubmit={entrar}>
-        <label htmlFor="email">E-mail</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="seu@email.com"
-          required
-          autoComplete="email"
-          style={estilo}
-        />
-
-        <label htmlFor="senha">Senha</label>
-        <input
-          id="senha"
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          placeholder="Sua senha"
-          required
-          autoComplete="current-password"
-          style={estilo}
-        />
-
-        <button
-          type="submit"
-          disabled={carregando}
-          style={{
-            ...estilo,
-            background: "#16a34a",
-            color: "white",
-            border: 0,
-            fontWeight: "bold",
-            cursor: carregando ? "not-allowed" : "pointer",
-            opacity: carregando ? 0.7 : 1,
-          }}
-        >
-          {carregando ? "Entrando..." : "Entrar"}
-        </button>
-      </form>
-
-      {mensagem && (
-        <p
-          style={{
-            marginTop: "16px",
-            padding: "12px",
-            background: "#fef2f2",
-            color: "#b91c1c",
-            borderRadius: "8px",
-            fontSize: "14px",
-          }}
-        >
-          {mensagem}
-        </p>
-      )}
-
-      <p style={{ marginTop: "24px" }}>
-        Ainda não tem conta?{" "}
-        <Link href="/criar-conta" style={{ color: "#16a34a" }}>
-          Criar conta
-        </Link>
-      </p>
-      <Link href="/" style={{ color: "#64748b", fontSize: "14px" }}>
-        Voltar ao início
-      </Link>
+    <main className="container" style={{ paddingTop: 1, paddingBottom: 48 }}>
+      <div className="card form-card">
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--green-800)", fontWeight: 700, fontSize: 14, marginBottom: 26 }}>← Voltar ao início</Link>
+        <div className="eyebrow">Bom ter você de volta</div>
+        <h1 className="form-title" style={{ marginTop: 14 }}>Entre na sua conta.</h1>
+        <p className="form-intro">Acompanhe suas campanhas e continue construindo sua história.</p>
+        <form onSubmit={entrar}>
+          <label className="form-label" htmlFor="email">E-mail</label>
+          <input className="form-control" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com.br" required autoComplete="email" />
+          <label className="form-label" htmlFor="senha">Senha</label>
+          <input className="form-control" id="senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Sua senha" required autoComplete="current-password" />
+          <button className="btn btn-primary form-submit" type="submit" disabled={carregando}>{carregando ? "Entrando..." : "Entrar na minha conta ↗"}</button>
+        </form>
+        {mensagem && <p role="alert" className="form-message form-message-error" style={{ marginTop: 18 }}>{mensagem}</p>}
+        <p style={{ margin: "24px 0 0", textAlign: "center", fontSize: 14, color: "var(--muted)" }}>Ainda não tem conta? <Link href="/criar-conta" style={{ color: "var(--green-800)", fontWeight: 700 }}>Criar conta</Link></p>
+      </div>
     </main>
   );
 }
@@ -126,18 +60,9 @@ function traduzirErro(msg: string): string {
   const mapa: Record<string, string> = {
     "Invalid login credentials": "E-mail ou senha incorretos.",
     "Email not confirmed": "Confirme seu e-mail antes de entrar.",
-    "Invalid path specified in request URL.":
-      "Erro de configuração do Supabase. Verifique as variáveis de ambiente.",
+    "Invalid path specified in request URL.": "A configuração do Supabase está incorreta. Verifique as variáveis configuradas na Vercel.",
+    "Invalid API key": "A chave pública do Supabase configurada na Vercel não é válida.",
+    "Email rate limit exceeded": "Muitas tentativas em pouco tempo. Aguarde um pouco e tente novamente.",
   };
-  return mapa[msg] || msg;
+  return mapa[msg] || "Não foi possível entrar. Confira os dados e tente novamente.";
 }
-
-const estilo: React.CSSProperties = {
-  display: "block",
-  width: "100%",
-  padding: "12px",
-  margin: "8px 0 18px",
-  boxSizing: "border-box",
-  borderRadius: "8px",
-  border: "1px solid #e2e8f0",
-};
