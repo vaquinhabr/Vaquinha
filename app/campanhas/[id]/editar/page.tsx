@@ -53,7 +53,7 @@ export default function EditarCampanha() {
       if (!user) { router.replace("/entrar"); return; }
       const { data, error } = await supabase.from("campaigns").update({ title: titulo.trim(), slug: `${slugBase || "campanha"}-${crypto.randomUUID().slice(0, 8)}`, description: descricao.trim(), goal_cents: Math.round(valorMeta * 100), category: categoria, status, updated_at: new Date().toISOString() }).eq("id", id).eq("owner_id", user.id).select("slug").single();
       if (error || !data) { setMensagem("Não foi possível salvar. Verifique se a campanha ainda está como rascunho ou pausada."); return; }
-      router.push(status === "active" ? `/campanhas/${data.slug || id}` : "/painel");
+      router.push("/painel");
       router.refresh();
     } catch { setMensagem("Ocorreu um erro ao salvar as alterações."); }
     finally { setSalvando(false); }
