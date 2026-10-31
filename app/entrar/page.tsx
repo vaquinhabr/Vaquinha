@@ -50,7 +50,7 @@ export default function Entrar() {
     setRecuperando(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(emailNormalizado, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: window.location.origin,
       });
       if (error) {
         setMensagem(traduzirErro(error.message, error.status));
