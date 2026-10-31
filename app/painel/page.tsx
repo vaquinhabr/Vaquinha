@@ -16,8 +16,10 @@ export default function Painel() {
   const [campanhas, setCampanhas] = useState<Campaign[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+  const [criadaAgora, setCriadaAgora] = useState(false);
 
   useEffect(() => {
+    setCriadaAgora(new URLSearchParams(window.location.search).get("created") === "1");
     let ativo = true;
     async function carregar() {
       try {
@@ -56,6 +58,7 @@ export default function Painel() {
           <Link href="/criar-vaquinha" className="btn btn-primary">+ Criar campanha</Link>
         </div>
         <section className="card" style={{ padding: "clamp(20px, 4vw, 30px)" }}>
+          {criadaAgora && <p role="status" aria-live="polite" className="form-message form-message-success" style={{marginBottom:20}}>Sua vaquinha foi salva como rascunho. Revise os detalhes antes de publicar.</p>}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 22 }}><h2 style={{ margin: 0, fontSize: 22 }}>Minhas campanhas</h2><span style={{ color: "var(--muted)", fontSize: 13 }}>{campanhas.length} {campanhas.length === 1 ? "campanha" : "campanhas"}</span></div>
           {erro && <p role="alert" className="form-message form-message-error">{erro}</p>}
           {!erro && campanhas.length === 0 ? <div style={{ textAlign: "center", padding: "32px 12px" }}><div aria-hidden="true" style={{ fontSize: 44 }}>🌱</div><h3 style={{ margin: "12px 0 8px" }}>Sua primeira história começa aqui.</h3><p className="muted" style={{ lineHeight: 1.7 }}>Crie uma campanha para compartilhar sua causa com outras pessoas.</p><Link href="/criar-vaquinha" className="btn btn-primary" style={{ marginTop: 8 }}>Criar minha primeira campanha</Link></div> :
