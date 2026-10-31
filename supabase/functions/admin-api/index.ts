@@ -23,7 +23,7 @@ function response(data: unknown, status = 200, origin: string | null = null) {
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
-  if (req.method === "OPTIONS") return response({ ok: true }, 204, origin);
+  if (req.method === "OPTIONS") return response({ ok: true }, 200, origin);
   if (req.method !== "POST") return response({ error: "Method not allowed" }, 405, origin);
 
   const authorization = req.headers.get("authorization");
