@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import { parseBRLToCents, slugify } from "@/lib/validation.mjs";
@@ -18,6 +18,8 @@ const categorias = [
 
 export default function CriarVaquinhaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("editar");
   const [userId, setUserId] = useState("");
   const [step, setStep] = useState(1);
   const [titulo, setTitulo] = useState("");
@@ -37,6 +39,25 @@ export default function CriarVaquinhaPage() {
     }).catch(() => { if (ativo) setErro("Não foi possível verificar sua sessão. Entre novamente."); });
     return () => { ativo = false; };
   }, [router]);
+  
+  useEffect(() => {
+    if (!userId || !editId) return;
+    let ativo = true;
+    async function carregarRascunho() {
+      const { data, error } = await supabase.from("campaigns").select("id,title,goal_cents,category,description,image_url,status").eq("id", editId).eq("owner_id", userId).maybeSingle();
+      if (!ativo) return;
+      if (error || !data) { setErro("Não foi possível abrir esta campanha para edição."); return; }
+      if (data.status !== "draft" && data.status !== "paused") { setErro("Somente campanhas em rascunho ou pausadas podem ser editadas aqui."); return; }
+      setTitulo(data.title);
+      setMeta((Number(data.goal_cents) / 100).toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2}));
+      setCategoria(data.category);
+      setDescricao(data.description);
+      if (data.image_url) setImagem(null);
+      setStep(1);
+    }
+    carregarRascunho().catch(() => { if (ativo) setErro("Não foi possível carregar a campanha."); });
+    return () => { ativo = false; };
+  }, [userId, editId]);
 
   async function publicar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -58,11 +79,20 @@ export default function CriarVaquinhaPage() {
         imageUrl = supabase.storage.from("campaign-images").getPublicUrl(path).data.publicUrl;
       }
       const slug = `${slugify(titulo) || "campanha"}-${crypto.randomUUID().slice(0, 8)}`;
-      const { data, error } = await supabase.from("campaigns").insert({
-        owner_id: userId, title: titulo.trim(), slug, description: descricao.trim(),
-        goal_cents: cents, category: categoria, image_url: imageUrl, status: "draft",
-      }).select("id,slug").single();
-      if (error) throw error;
+      if (editId) {
+        const updateValues: Record<string, string | number | null> = {
+          title: titulo.trim(), description: descricao.trim(), goal_cents: cents, category: categoria,
+        };
+        if (imagem) updateValues.image_url = imageUrl;
+        const { data, error } = await supabase.from("campaigns").update(updateValues).eq("id", editId).eq("owner_id", userId).select("id").single();
+        if (error || !data) throw error ?? new Error("Campaign not found");
+      } else {
+        const { error } = await supabase.from("campaigns").insert({
+          owner_id: userId, title: titulo.trim(), slug, description: descricao.trim(),
+          goal_cents: cents, category: categoria, image_url: imageUrl, status: "draft",
+        });
+        if (error) throw error;
+      }
       router.push("/painel?created=1");
       router.refresh();
     } catch {
@@ -76,7 +106,7 @@ export default function CriarVaquinhaPage() {
       <div className="create-fund-intro">
         <Link href="/" className="create-back">← Voltar para o início</Link>
         <span className="create-kicker">SUA HISTÓRIA PODE MOBILIZAR PESSOAS</span>
-        <h1>Vamos criar sua <span>vaquinha?</span></h1>
+        <h1>{editId ? "Edite sua " : "Vamos criar sua "}<span>{editId ? "vaquinha" : "vaquinha?"}</span></h1>
         <p>Você não precisa fazer tudo sozinho. Conte sua história, defina sua meta e dê o primeiro passo para reunir apoio.</p>
         <div className="create-benefits"><span>✓ Grátis para começar</span><span>✓ Você acompanha sua campanha</span><span>✓ Compartilhe com quem quiser</span></div>
       </div>
@@ -100,7 +130,7 @@ export default function CriarVaquinhaPage() {
               <label className="create-label" htmlFor="descricao">Sua história <em>*</em><textarea id="descricao" value={descricao} onChange={e=>setDescricao(e.target.value)} required minLength={20} maxLength={10000} rows={8} placeholder="Conte sua história com suas palavras. Explique por que precisa de ajuda e como o dinheiro será usado."/><small>{descricao.length}/10.000 caracteres · Seja sincero e específico.</small></label>
               <label className="create-label" htmlFor="imagem">Foto de capa (opcional)<input id="imagem" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setImagem(e.target.files?.[0] ?? null)} /><small>JPG, PNG ou WebP · máximo de 5 MB. {imagem ? `Selecionada: ${imagem.name}` : "A imagem será enviada com segurança ao armazenamento da plataforma."}</small>{imagem && <button type="button" className="create-secondary" onClick={()=>setImagem(null)} style={{alignSelf:"flex-start",marginTop:8}}>Remover imagem</button>}</label>
               <div className="create-review"><span>♡</span><div><strong>Quase lá!</strong><p>Sua vaquinha será salva como rascunho para você revisar. Ela não ficará pública automaticamente.</p></div></div>
-              <div className="create-form-actions"><button type="button" className="create-secondary" onClick={()=>{setStep(1);setErro("");}}>← Voltar</button><button type="submit" className="create-primary" disabled={salvando}>{salvando?"Salvando...":"Salvar minha vaquinha ↗"}</button></div>
+              <div className="create-form-actions"><button type="button" className="create-secondary" onClick={()=>{setStep(1);setErro("");}}>← Voltar</button><button type="submit" className="create-primary" disabled={salvando}>{salvando ? "Salvando..." : editId ? "Salvar alterações ↗" : "Salvar minha vaquinha ↗"}</button></div>
             </div>}
             {erro && <p className="create-error" role="alert">{erro}</p>}
           </form>
