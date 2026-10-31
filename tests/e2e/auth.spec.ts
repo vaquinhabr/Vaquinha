@@ -67,7 +67,7 @@ test("signup success shows email confirmation instructions", async ({ page }) =>
 });
 
 test("login reports invalid credentials clearly", async ({ page }) => {
-  await page.route("**/auth/v1/token?grant_type=password", async (route) => {
+  await page.route("**/auth/v1/token**", async (route) => {
     await route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "invalid_credentials", msg: "Invalid login credentials" }) });
   });
   await page.goto("/entrar");
@@ -93,4 +93,22 @@ test("password recovery displays a privacy-preserving confirmation", async ({ pa
   await page.getByLabel("E-mail").fill("teste@example.com");
   await page.getByRole("button", { name: /esqueci minha senha/i }).click();
   await expect(page.getByRole("status")).toContainText(/se existir uma conta/i);
+});
+
+test("rate-limited signup exposes a safe retry path", async ({ page }) => {
+  await page.route("**/auth/v1/signup", async (route) => {
+    await route.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ code: "over_email_send_rate_limit", msg: "email rate limit exceeded" }) });
+  });
+  await page.route("**/auth/v1/resend**", async (route) => {
+    await route.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ code: "over_email_send_rate_limit", msg: "email rate limit exceeded" }) });
+  });
+  await page.goto("/criar-conta");
+  await page.getByLabel("Nome completo").fill("Pessoa de Teste");
+  await page.getByLabel("E-mail").fill("teste@example.com");
+  await page.getByLabel("Crie uma senha").fill("SenhaSegura123");
+  await page.getByRole("button", { name: /criar minha conta/i }).click();
+  await expect(page.getByRole("alert")).toContainText(/limite temporário/i);
+  await expect(page.getByRole("button", { name: /reenviar e-mail de confirmação/i })).toBeVisible();
+  await page.getByRole("button", { name: /reenviar e-mail de confirmação/i }).click();
+  await expect(page.getByRole("alert")).toContainText(/limite temporário/i);
 });
