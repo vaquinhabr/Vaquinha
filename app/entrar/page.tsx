@@ -11,15 +11,16 @@ export default function Entrar() {
   const [senha, setSenha] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [recuperando, setRecuperando] = useState(false);
 
   async function entrar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMensagem("");
     setCarregando(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password: senha });
       if (error) {
-        setMensagem(traduzirErro(error.message));
+        setMensagem(traduzirErro(error.message, error.status));
         return;
       }
       if (data.session) {
@@ -28,10 +29,34 @@ export default function Entrar() {
       } else {
         setMensagem("Não foi possível iniciar sua sessão. Tente novamente.");
       }
-    } catch {
-      setMensagem("Não foi possível entrar agora. Confira a conexão e tente novamente.");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "";
+      setMensagem(traduzirErro(detail));
     } finally {
       setCarregando(false);
+    }
+  }
+
+  async function recuperarSenha() {
+    const emailNormalizado = email.trim().toLowerCase();
+    if (!emailNormalizado) {
+      setMensagem("Digite seu e-mail no campo acima e depois clique em “Esqueci minha senha”.");
+      return;
+    }
+    setMensagem("");
+    setRecuperando(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailNormalizado);
+      if (error) {
+        setMensagem(traduzirErro(error.message, error.status));
+        return;
+      }
+      setMensagem("Se existir uma conta para esse e-mail, você receberá instruções de recuperação. Confira a caixa de entrada e a pasta de spam.");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "";
+      setMensagem(traduzirErro(detail));
+    } finally {
+      setRecuperando(false);
     }
   }
 
@@ -44,25 +69,29 @@ export default function Entrar() {
         <p className="form-intro">Acompanhe suas campanhas e continue construindo sua história.</p>
         <form onSubmit={entrar}>
           <label className="form-label" htmlFor="email">E-mail</label>
-          <input className="form-control" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com.br" required autoComplete="email" />
+          <input className="form-control" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com.br" required autoComplete="email" autoCapitalize="none" spellCheck={false} />
           <label className="form-label" htmlFor="senha">Senha</label>
           <input className="form-control" id="senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Sua senha" required autoComplete="current-password" />
-          <button className="btn btn-primary form-submit" type="submit" disabled={carregando}>{carregando ? "Entrando..." : "Entrar na minha conta ↗"}</button>
+          <button className="btn btn-primary form-submit" type="submit" disabled={carregando || recuperando}>{carregando ? "Entrando..." : "Entrar na minha conta ↗"}</button>
         </form>
-        {mensagem && <p role="alert" className="form-message form-message-error" style={{ marginTop: 18 }}>{mensagem}</p>}
+        <button type="button" onClick={recuperarSenha} disabled={carregando || recuperando} style={{ display: "block", margin: "14px auto 0", border: 0, background: "transparent", color: "var(--green-800)", cursor: carregando || recuperando ? "wait" : "pointer", fontWeight: 700, fontSize: 14 }}>{recuperando ? "Enviando instruções..." : "Esqueci minha senha"}</button>
+        {mensagem && <p role="status" aria-live="polite" className="form-message form-message-error" style={{ marginTop: 18 }}>{mensagem}</p>}
         <p style={{ margin: "24px 0 0", textAlign: "center", fontSize: 14, color: "var(--muted)" }}>Ainda não tem conta? <Link href="/criar-conta" style={{ color: "var(--green-800)", fontWeight: 700 }}>Criar conta</Link></p>
       </div>
     </main>
   );
 }
 
-function traduzirErro(msg: string): string {
-  const mapa: Record<string, string> = {
-    "Invalid login credentials": "E-mail ou senha incorretos.",
-    "Email not confirmed": "Confirme seu e-mail antes de entrar.",
-    "Invalid path specified in request URL.": "A configuração do Supabase está incorreta. Verifique as variáveis configuradas na Vercel.",
-    "Invalid API key": "A chave pública do Supabase configurada na Vercel não é válida.",
-    "Email rate limit exceeded": "Muitas tentativas em pouco tempo. Aguarde um pouco e tente novamente.",
-  };
-  return mapa[msg] || "Não foi possível entrar. Confira os dados e tente novamente.";
+function traduzirErro(msg: string, status?: number): string {
+  const texto = msg.toLowerCase();
+  if (status === 429 || texto.includes("rate limit") || texto.includes("too many requests") || texto.includes("over_email_send_rate_limit")) {
+    return "O serviço de e-mail atingiu um limite temporário. Aguarde antes de tentar novamente e evite repetir a solicitação várias vezes.";
+  }
+  if (texto.includes("invalid login credentials")) return "E-mail ou senha incorretos.";
+  if (texto.includes("email not confirmed")) return "Seu e-mail ainda não foi confirmado. Confira a caixa de entrada e a pasta de spam.";
+  if (texto.includes("invalid path specified in request url")) return "A configuração do Supabase está incorreta. A URL e a chave pública precisam ser verificadas.";
+  if (texto.includes("invalid api key")) return "A chave pública do Supabase não foi aceita. A configuração precisa ser verificada.";
+  if (texto.includes("signup is disabled")) return "O cadastro está temporariamente desativado.";
+  if (texto.includes("fetch") || texto.includes("network")) return "Não foi possível conectar ao serviço. Confira sua conexão e tente novamente.";
+  return "Não foi possível concluir a solicitação. Confira os dados e tente novamente mais tarde.";
 }
