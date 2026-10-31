@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { normalizeEmail, validateSignup } from "@/lib/validation.mjs";
 
 export default function CriarConta() {
+  const router = useRouter();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -56,9 +58,12 @@ export default function CriarConta() {
       setEmailPendente(!data.session);
       setSucesso(true);
       setMensagem(data.session
-        ? "Sua conta foi criada e você já está conectado."
+        ? "Sua conta foi criada e você já está conectado. Abrindo seu painel…"
         : "Recebemos seu cadastro. Confira sua caixa de entrada e o spam para confirmar o e-mail. Não precisa preencher o formulário novamente.");
       setSenha("");
+      if (data.session) {
+        window.setTimeout(() => router.replace("/painel"), 700);
+      }
     } catch (err) {
       const detail = err instanceof Error ? err.message : "";
       setMensagem(traduzirErro(detail));
