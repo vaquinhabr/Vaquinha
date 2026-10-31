@@ -90,12 +90,12 @@ export default function CampanhaDetalhe() {
 
           <aside style={{ position: "sticky", top: 20 }}>
             <section className="card" style={{ background: "#fff", border: "1px solid #e7e9eb", borderRadius: 14, padding: "26px 24px" }}>
-              <div style={{ color: "#66716a", fontSize: 13, fontWeight: 700, marginBottom: 7 }}>Arrecadado na plataforma Vaquinha</div>
+              <div style={{ color: "#66716a", fontSize: 13, fontWeight: 700, marginBottom: 7 }}>Total informado para a campanha</div>
               <div style={{ fontSize: "clamp(2rem, 3.3vw, 2.7rem)", fontWeight: 850, letterSpacing: "-.04em", color: "#176c43", lineHeight: 1.1 }}>{dinheiro(arrecadado)}</div>
               <div style={{ color: "#66716a", fontSize: 14, marginTop: 10 }}>de <strong style={{ color: "#303b34" }}>{dinheiro(Number(campanha.goal_cents))}</strong> da meta</div>
               <div role="progressbar" aria-label="Progresso da arrecadação" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentual} style={{ height: 10, borderRadius: 999, background: "#e9eeeb", overflow: "hidden", margin: "20px 0 10px" }}><div style={{ height: "100%", width: `${percentual}%`, background: "#218653", borderRadius: 999, transition: "width .3s ease" }} /></div>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, color: "#66716a" }}><span>{percentual}% alcançado</span><span>{falta > 0 ? `Faltam ${dinheiro(falta)}` : "Meta alcançada!"}</span></div><div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 12, color: "#78827b", marginTop: 14 }}><span>Doações confirmadas</span><strong>{doacoesPagas.length}</strong></div>
-              <div style={{ marginTop: 20, padding: "13px 14px", borderRadius: 10, background: "#f0f8f1", color: "#2e6843", fontSize: 12, lineHeight: 1.55 }}><strong>Transparência</strong><div style={{ marginTop: 4 }}>Meta definida pelo organizador. O progresso considera valores iniciais informados e doações confirmadas registradas nesta plataforma.</div></div><div style={{ borderTop: "1px solid #edf0ed", marginTop: 22, paddingTop: 20 }}>
+              <div style={{ marginTop: 20, padding: "13px 14px", borderRadius: 10, background: "#f0f8f1", color: "#2e6843", fontSize: 12, lineHeight: 1.55 }}><strong>Transparência</strong><div style={{ marginTop: 4 }}>Meta definida pelo organizador. O total inclui o valor inicial informado, que não foi verificado pela plataforma, e as doações confirmadas registradas aqui.</div></div><div style={{ borderTop: "1px solid #edf0ed", marginTop: 22, paddingTop: 20 }}>
                 {ativa ? <>
                   <strong style={{ color: "#202a24", fontSize: 16 }}>Faça parte dessa corrente de apoio</strong>
                   <p style={{ color: "#66716a", fontSize: 13, lineHeight: 1.65, margin: "8px 0 0" }}>Ajude esta história a chegar a mais pessoas. A contribuição online será disponibilizada quando a integração de pagamentos estiver ativa.</p>
@@ -103,7 +103,7 @@ export default function CampanhaDetalhe() {
                 </> : <div className="form-message" style={{ background: "#f7f8f7", color: "var(--muted)" }}>Esta campanha ainda não está publicada. Status: {campanha.status === "draft" ? "rascunho" : campanha.status === "pending_review" ? "em análise" : campanha.status}.</div>}
               </div>
             </section>
-            <div style={{ marginTop: 14, color: "#78827b", fontSize: 12, lineHeight: 1.6, padding: "0 5px" }}>A arrecadação soma o valor inicial informado para a campanha e as doações registradas como pagas na plataforma. Pagamentos externos não são incluídos automaticamente.</div>
+            <div style={{ marginTop: 14, color: "#78827b", fontSize: 12, lineHeight: 1.6, padding: "0 5px" }}>O total exibido soma o valor inicial informado pelo organizador (não verificado pela plataforma) e as doações registradas como pagas aqui. Pagamentos externos não são incluídos automaticamente. Doações confirmadas nesta plataforma: ${doacoesPagas.length}.</div>
           </aside>
         </div>
       </main>
