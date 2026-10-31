@@ -45,6 +45,14 @@ export default function Painel() {
     return () => { ativo = false; subscription.unsubscribe(); };
   }, [router]);
 
+  async function enviarParaAnalise(c: Campaign) {
+    if (!user) return;
+    setErro("");
+    const { data, error } = await supabase.from("campaigns").update({ status: "pending_review" }).eq("id", c.id).eq("owner_id", user.id).in("status", ["draft", "paused"]).select("id").maybeSingle();
+    if (error || !data) { setErro("Não foi possível enviar a campanha para análise. Atualize a página e tente novamente."); return; }
+    setCampanhas(old => old.map(item => item.id === c.id ? { ...item, status: "pending_review" } : item));
+  }
+
   if (carregando) return <div className="page-shell"><Header /><div className="container" style={{ padding: 48, textAlign: "center" }}>Carregando seu painel…</div></div>;
 
   const nome = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "por aqui";
@@ -70,7 +78,7 @@ export default function Painel() {
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {c.status === "active" && <Link href={`/campanhas/${c.slug || c.id}`} className="btn btn-secondary" style={{ minHeight: 38, padding: "8px 13px", fontSize: 13 }}>Ver página</Link>}
-                  {(c.status === "draft" || c.status === "paused") && <Link href={`/criar-vaquinha?editar=${c.id}`} className="btn btn-secondary" style={{ minHeight: 38, padding: "8px 13px", fontSize: 13 }}>Editar rascunho</Link>}
+                  {(c.status === "draft" || c.status === "paused") && <><Link href={`/criar-vaquinha?editar=${c.id}`} className="btn btn-secondary" style={{ minHeight: 38, padding: "8px 13px", fontSize: 13 }}>Editar rascunho</Link><button type="button" onClick={() => void enviarParaAnalise(c)} className="btn btn-primary" style={{ minHeight: 38, padding: "8px 13px", fontSize: 13 }}>Enviar para análise</button></>}
                 </div>
               </article>
             ))}</div>}
