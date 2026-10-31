@@ -39,11 +39,11 @@ export default function AuthRedirectHandler() {
       // getSession initializes supabase-js and consumes the callback URL before
       // the router changes the path and drops the fragment.
       const { data, error } = await supabase.auth.getSession();
-      if (!active || error) return;
+      if (!active) return;
 
       if (type === "recovery" || recoveryDetected) {
         router.replace("/auth/reset-password");
-      } else if (type === "signup" || data.session || hasCallbackData) {
+      } else if (type === "signup" || data.session || hasCallbackData || error) {
         router.replace("/auth/confirm");
       }
     }
