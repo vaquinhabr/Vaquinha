@@ -15,6 +15,14 @@ export default function AuthRedirectHandler() {
 
   useEffect(() => {
     let active = true;
+    let recoveryDetected = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (!active) return;
+      if (event === "PASSWORD_RECOVERY") {
+        recoveryDetected = true;
+        router.replace("/auth/reset-password");
+      }
+    });
 
     async function handleAuthRedirect() {
       const url = new URL(window.location.href);
@@ -33,7 +41,7 @@ export default function AuthRedirectHandler() {
       const { data, error } = await supabase.auth.getSession();
       if (!active || error) return;
 
-      if (type === "recovery") {
+      if (type === "recovery" || recoveryDetected) {
         router.replace("/auth/reset-password");
       } else if (type === "signup" || data.session || hasCallbackData) {
         router.replace("/auth/confirm");
@@ -46,6 +54,7 @@ export default function AuthRedirectHandler() {
 
     return () => {
       active = false;
+      subscription.unsubscribe();
     };
   }, [router]);
 
