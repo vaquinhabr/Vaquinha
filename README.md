@@ -28,8 +28,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
 ### 3. Banco de dados
 
-Execute o arquivo `supabase/schema.sql` no SQL Editor do Supabase  
-(ou ajuste o código se suas colunas tiverem nomes diferentes).
+O arquivo `supabase/schema.sql` documenta o esquema atual e as permissões mínimas esperadas. Em um banco já existente, revise as diferenças antes de executar qualquer SQL.
+
+### 4. Autenticação em produção
+
+- Site URL: `https://vaquinha-zeta.vercel.app`
+- Redirect URLs: `https://vaquinha-zeta.vercel.app/**`
+- O app usa `/auth/confirm` para confirmar cadastro e `/auth/reset-password` para redefinir senha.
+- Configure SMTP próprio no Supabase antes de abrir o cadastro ao público; o envio padrão é limitado e destinado a testes.
 
 ## Páginas
 
@@ -41,6 +47,19 @@ Execute o arquivo `supabase/schema.sql` no SQL Editor do Supabase
 - `/campanhas/nova` — Criar campanha
 - `/campanhas/[id]` — Página pública
 - `/campanhas/[id]/editar` — Editar campanha
+
+## Qualidade e testes
+
+```bash
+npm install
+npm test
+npm run lint
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+Os testes de navegador simulam as respostas de autenticação e não criam usuários reais nem enviam e-mails.
 
 ## Desenvolvimento local
 
