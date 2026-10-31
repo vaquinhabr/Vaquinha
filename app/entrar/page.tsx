@@ -27,7 +27,9 @@ export default function Entrar() {
         return;
       }
       if (data.session) {
-        router.replace("/painel");
+        const requested = new URLSearchParams(window.location.search).get("redirectTo");
+        const destino = requested && requested.startsWith("/") && !requested.startsWith("//") ? requested : "/painel";
+        router.replace(destino);
         router.refresh();
       } else {
         setMensagem("Não foi possível iniciar sua sessão. Tente novamente.");
