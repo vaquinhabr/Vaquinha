@@ -35,7 +35,7 @@ export default function CriarConta() {
         password: senha,
         options: {
           data: { full_name: nome.trim(), display_name: nome.trim() },
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          emailRedirectTo: window.location.origin,
         },
       });
 
@@ -80,7 +80,7 @@ export default function CriarConta() {
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: emailNormalizado,
-        options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+        options: { emailRedirectTo: window.location.origin },
       });
       if (error) {
         setMensagem(traduzirErro(error.message, error.status));
