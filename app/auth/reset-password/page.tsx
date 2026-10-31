@@ -10,6 +10,7 @@ export default function RedefinirSenha() {
   const [senha, setSenha] = useState("");
   const [confirmacao, setConfirmacao] = useState("");
   const [sessaoPronta, setSessaoPronta] = useState(false);
+  const [temSessao, setTemSessao] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [sucesso, setSucesso] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -20,6 +21,7 @@ export default function RedefinirSenha() {
       const { data, error } = await supabase.auth.getSession();
       if (!ativo) return;
       setSessaoPronta(true);
+      setTemSessao(Boolean(data.session) && !error);
       if (error || !data.session) setMensagem("O link de recuperação é inválido ou expirou. Solicite um novo pela tela de login.");
     }, 300);
     return () => { ativo = false; window.clearTimeout(timer); };
@@ -49,5 +51,5 @@ export default function RedefinirSenha() {
     }
   }
 
-  return <main className="container" style={{ maxWidth: 560, paddingTop: 72, paddingBottom: 72 }}><section className="card form-card"><Link href="/entrar" style={{ color: "var(--green-800)", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>← Voltar ao login</Link><div className="eyebrow" style={{ marginTop: 26 }}>Segurança da conta</div><h1 className="form-title" style={{ marginTop: 14 }}>Crie uma nova senha.</h1><p className="form-intro">Use uma senha única que você não utiliza em outros sites.</p>{sessaoPronta && !mensagem.includes("inválido") && !mensagem.includes("expirou") ? <form onSubmit={salvar}><label className="form-label" htmlFor="nova-senha">Nova senha</label><input className="form-control" id="nova-senha" type="password" value={senha} onChange={e=>setSenha(e.target.value)} required minLength={8} maxLength={72} autoComplete="new-password" /><label className="form-label" htmlFor="confirmar-senha">Repita a nova senha</label><input className="form-control" id="confirmar-senha" type="password" value={confirmacao} onChange={e=>setConfirmacao(e.target.value)} required minLength={8} maxLength={72} autoComplete="new-password" /><button className="btn btn-primary form-submit" type="submit" disabled={salvando}>{salvando ? "Atualizando..." : "Atualizar senha"}</button></form> : null}{mensagem && <p role={sucesso ? "status" : "alert"} aria-live="polite" className={`form-message ${sucesso ? "form-message-success" : "form-message-error"}`} style={{ marginTop: 18 }}>{mensagem}</p>}{!sucesso && (mensagem.includes("inválido") || mensagem.includes("expirou")) && <Link href="/entrar" className="btn btn-primary form-submit" style={{ marginTop: 14 }}>Voltar ao login</Link>}</section></main>;
+  return <main className="container" style={{ maxWidth: 560, paddingTop: 72, paddingBottom: 72 }}><section className="card form-card"><Link href="/entrar" style={{ color: "var(--green-800)", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>← Voltar ao login</Link><div className="eyebrow" style={{ marginTop: 26 }}>Segurança da conta</div><h1 className="form-title" style={{ marginTop: 14 }}>Crie uma nova senha.</h1><p className="form-intro">Use uma senha única que você não utiliza em outros sites.</p>{sessaoPronta && temSessao ? <form onSubmit={salvar}><label className="form-label" htmlFor="nova-senha">Nova senha</label><input className="form-control" id="nova-senha" type="password" value={senha} onChange={e=>setSenha(e.target.value)} required minLength={8} maxLength={72} autoComplete="new-password" /><label className="form-label" htmlFor="confirmar-senha">Repita a nova senha</label><input className="form-control" id="confirmar-senha" type="password" value={confirmacao} onChange={e=>setConfirmacao(e.target.value)} required minLength={8} maxLength={72} autoComplete="new-password" /><button className="btn btn-primary form-submit" type="submit" disabled={salvando}>{salvando ? "Atualizando..." : "Atualizar senha"}</button></form> : null}{mensagem && <p role={sucesso ? "status" : "alert"} aria-live="polite" className={`form-message ${sucesso ? "form-message-success" : "form-message-error"}`} style={{ marginTop: 18 }}>{mensagem}</p>}{!sucesso && sessaoPronta && !temSessao && <Link href="/entrar" className="btn btn-primary form-submit" style={{ marginTop: 14 }}>Voltar ao login</Link>}</section></main>;
 }
