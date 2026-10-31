@@ -52,7 +52,6 @@ export default function Header() {
           <Link href="/vaquinhas/mais-amadas" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Mais amadas ♡</Link>
           {!carregando && (user ? (
             <>
-              <Link href="/painel" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Meu painel</Link>
               <button type="button" onClick={sair} className="btn btn-secondary" style={{ minHeight: 40, padding: "9px 15px", fontSize: 14 }}>Sair</button>
             </>
           ) : (
