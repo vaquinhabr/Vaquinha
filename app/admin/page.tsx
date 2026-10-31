@@ -26,13 +26,18 @@ export default function AdminPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const callAdmin = useCallback(async (action: string, payload: Record<string, unknown> = {}) => {
     const { data, error } = await supabase.functions.invoke("admin-api", { body: { action, ...payload } });
-    if (error) throw new Error(error.message || "Falha ao acessar o painel administrativo.");
+    if (error) {
+      let detail = error.message || "Falha ao acessar o painel administrativo.";
+      try { const payload = await error.context.json(); if (payload?.error) detail = payload.error; } catch { /* response may already be consumed */ }
+      throw new Error(detail);
+    }
     if (data?.error) throw new Error(data.error);
     return data;
   }, []);
@@ -41,9 +46,11 @@ export default function AdminPage() {
     setLoading(true); setError("");
     try {
       const [u, c] = await Promise.all([callAdmin("listUsers"), callAdmin("listCampaigns")]);
-      setUsers(u.users ?? []); setCampaigns(c.campaigns ?? []);
+      setUsers(u.users ?? []); setCampaigns(c.campaigns ?? []); setAuthorized(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível carregar o painel.");
+      const detail = e instanceof Error ? e.message : "Não foi possível carregar o painel.";
+      setError(detail);
+      if (detail.toLowerCase().includes("acesso restrito") || detail.toLowerCase().includes("sessão necessária") || detail.toLowerCase().includes("sessão inválida")) setAuthorized(false);
     } finally { setLoading(false); }
   }, [callAdmin]);
 
@@ -77,6 +84,10 @@ export default function AdminPage() {
   async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "/entrar";
+  }
+
+  if (authorized === false) {
+    return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f4f7f4", padding: 24, color: "#173b2a" }}><section style={{ maxWidth: 460, background: "#fff", border: "1px solid #e2e9e3", borderRadius: 18, padding: 28, textAlign: "center" }}><h1 style={{ marginTop: 0 }}>Área restrita</h1><p>Esta área está disponível somente para a conta administradora autorizada.</p><p style={{ color: "#718075", fontSize: 13 }}>{error}</p><Link href="/entrar" style={{ color: "#267247", fontWeight: 700 }}>Entrar com outra conta</Link><span> · </span><Link href="/" style={{ color: "#267247", fontWeight: 700 }}>Voltar ao início</Link></section></main>;
   }
 
   return (
