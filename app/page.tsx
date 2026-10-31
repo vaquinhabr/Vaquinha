@@ -73,7 +73,7 @@ export default function Home() {
 
       <section className="vak-bottom-cta"><div className="container"><div><span>VOCÊ PODE SER O COMEÇO</span><h2>Uma pequena atitude pode abrir um novo caminho.</h2><p>Crie uma campanha ou encontre uma causa para apoiar hoje.</p></div><div className="vak-actions"><Link href="/criar-vaquinha" className="btn vak-white-btn">Criar vaquinha</Link><Link href="/vaquinhas/mais-amadas" className="btn vak-outline-btn">Ver mais amadas</Link></div></div></section>
     </main>
-    <footer className="vak-footer"><div className="container"><Link href="/" className="vak-footer-logo">Vaquinha<span>.</span></Link><div><Link href="/campanhas">Explorar campanhas</Link><Link href="/vaquinhas/mais-amadas">Mais amadas</Link><Link href="/entrar">Entrar</Link></div><p>Uma rede de apoio para causas que importam.</p></div></footer>
+    <footer className="vak-footer"><div className="container"><Link href="/" className="vak-footer-logo">Vaquinha<span>.</span></Link><div><Link href="/campanhas">Explorar campanhas</Link><Link href="/vaquinhas/mais-amadas">Mais amadas</Link><Link href="/como-funciona">Como funciona</Link><Link href="/sobre">Sobre</Link><Link href="/faq">FAQ</Link><Link href="/regras">Regras</Link><Link href="/termos">Termos</Link><Link href="/privacidade">Privacidade</Link><Link href="/contato">Contato</Link><Link href="/entrar">Entrar</Link></div><p>Uma rede de apoio para causas que importam.</p></div></footer>
     <style>{`
       .vak-hero{background:linear-gradient(112deg,#f3f8f2 0%,#fff 56%,#e5f2e8 100%);overflow:hidden;border-bottom:1px solid var(--line)}
       .vak-hero-inner{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:42px;padding-top:64px;padding-bottom:68px}
