@@ -36,7 +36,12 @@ export default function Home() {
                 <Link href="/criar-conta" className="btn btn-primary">Criar minha vaquinha <span aria-hidden="true">↗</span></Link>
                 <Link href="/campanhas" className="btn btn-secondary">Conhecer campanhas</Link>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 30, color: "var(--muted)", fontSize: 13 }}>
+              <form action="/campanhas" method="get" role="search" aria-label="Buscar campanhas" style={{ display: "flex", gap: 8, maxWidth: 560, marginTop: 24, padding: 7, background: "#fff", border: "1px solid #dce9df", borderRadius: 16, boxShadow: "0 10px 28px rgba(18,60,43,.07)" }}>
+                <span aria-hidden="true" style={{ display: "grid", placeItems: "center", width: 42, color: "var(--green-700)", fontSize: 22 }}>⌕</span>
+                <input name="q" type="search" placeholder="Busque por uma causa ou campanha" aria-label="Nome da causa ou campanha" style={{ flex: 1, minWidth: 0, border: 0, outline: 0, background: "transparent", color: "var(--ink)", padding: "10px 2px" }} />
+                <button type="submit" className="btn btn-primary" style={{ minHeight: 44, padding: "10px 18px" }}>Buscar</button>
+              </form>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 24, color: "var(--muted)", fontSize: 13 }}>
                 <span aria-hidden="true" style={{ display: "flex" }}><span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: "50%", background: "#d8efdf", border: "2px solid #f0f8f2" }}>💚</span><span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: "50%", background: "#fce9c8", border: "2px solid #f0f8f2", marginLeft: -8 }}>🤝</span><span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: "50%", background: "#dbeafe", border: "2px solid #f0f8f2", marginLeft: -8 }}>✨</span></span>
                 <span>Pequenos gestos podem mudar grandes histórias.</span>
               </div>
