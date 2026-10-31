@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
+import { parseBRLToCents, slugify } from "@/lib/validation.mjs";
 
 export default function NovaCampanha() {
   const router = useRouter();
@@ -33,9 +34,9 @@ export default function NovaCampanha() {
     setMensagem("");
     setSalvando(true);
     try {
-      const valorMeta = Number(meta.trim().replace(",", "."));
-      if (!Number.isFinite(valorMeta) || valorMeta < 1) {
-        setMensagem("A meta mínima é de R$ 1,00.");
+      const metaCentavos = parseBRLToCents(meta);
+      if (metaCentavos === null) {
+        setMensagem("Informe uma meta válida de pelo menos R$ 1,00. Exemplo: 2.500,00.");
         return;
       }
       if (titulo.trim().length < 5 || titulo.trim().length > 120) {
@@ -54,14 +55,14 @@ export default function NovaCampanha() {
         return;
       }
 
-      const slugBase = titulo.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 90);
+      const slugBase = slugify(titulo);
       const slug = `${slugBase || "campanha"}-${crypto.randomUUID().slice(0, 8)}`;
       const { data, error } = await supabase.from("campaigns").insert({
         owner_id: user.id,
         title: titulo.trim(),
         slug,
         description: descricao.trim(),
-        goal_cents: Math.round(valorMeta * 100),
+        goal_cents: metaCentavos,
         category: categoria,
         status: "draft",
       }).select("id, slug").single();
