@@ -49,6 +49,7 @@ export default function Header() {
 
         <nav aria-label="Navegação principal" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 20, flexWrap: "wrap" }}>
           <Link href="/campanhas" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Explorar campanhas</Link>
+          <Link href="/vaquinhas/mais-amadas" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Mais amadas ♡</Link>
           {!carregando && (user ? (
             <>
               <Link href="/painel" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>Meu painel</Link>
