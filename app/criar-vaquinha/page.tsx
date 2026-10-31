@@ -55,7 +55,7 @@ export default function CriarVaquinhaPage() {
         goal_cents: cents, category: categoria, image_url: imagem.trim() || null, status: "draft",
       }).select("id,slug").single();
       if (error) throw error;
-      router.push(`/campanhas/${data.slug || data.id}`);
+      router.push("/painel?created=1");
       router.refresh();
     } catch {
       setErro("Não foi possível salvar sua vaquinha. Confira os dados e tente novamente.");
