@@ -21,6 +21,7 @@ export type Campaign = {
   category: string;
   description: string;
   goal_cents: number;
+  initial_raised_cents?: number | null;
   image_url: string | null;
   status: CampaignStatus;
   created_at: string;
