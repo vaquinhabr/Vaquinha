@@ -1,0 +1,9 @@
+import InfoPage from "@/components/InfoPage";
+export default function Privacidade(){return <InfoPage title="Política de privacidade" intro="A privacidade importa. Esta página resume cuidados gerais com dados e deve ser alinhada à configuração real dos serviços utilizados pela plataforma." sections={[
+{title:"Dados que podem ser tratados",body:"A plataforma pode tratar dados fornecidos no cadastro, como nome e e-mail, além de informações de campanhas, conteúdo enviado e dados técnicos necessários para segurança e funcionamento."},
+{title:"Finalidades",body:"Os dados podem ser usados para autenticar usuários, permitir a criação e gestão de campanhas, responder a solicitações, proteger o serviço e cumprir obrigações legais."},
+{title:"Serviços de terceiros",body:"A autenticação, o banco de dados, a hospedagem e futuros pagamentos podem envolver fornecedores especializados. O compartilhamento deve se limitar ao necessário para a finalidade correspondente e seguir as configurações e políticas aplicáveis."},
+{title:"Segurança e acesso",body:"Adotamos a intenção de restringir o acesso a dados conforme a função e as permissões configuradas. Nenhum sistema é capaz de garantir segurança absoluta; não compartilhe sua senha."},
+{title:"Seus direitos e solicitações",body:"Você pode solicitar informações, correção ou exclusão de dados pessoais, observadas as obrigações legais e os registros que precisem ser mantidos. Use a página de contato para encaminhar o pedido."},
+{title:"Revisão necessária",body:"Esta política é um texto inicial e deve ser completada com a identificação do controlador, bases legais, prazos de retenção, canal formal de privacidade e detalhes dos fornecedores antes do lançamento definitivo."}
+]}/>}
