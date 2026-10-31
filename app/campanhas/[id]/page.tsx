@@ -6,182 +6,70 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import type { Campaign } from "@/lib/types";
+import { categoryLabel } from "@/lib/types";
+
+const dinheiro = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function CampanhaDetalhe() {
   const params = useParams();
-  const id = params.id as string;
-
+  const id = decodeURIComponent(params.id as string);
   const [campanha, setCampanha] = useState<Campaign | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
   useEffect(() => {
+    let ativo = true;
     async function carregar() {
-      if (!id) return;
-
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error || !data) {
-        setErro("Campanha não encontrada.");
-        setCarregando(false);
-        return;
+      try {
+        let data: Campaign | null = null;
+        const bySlug = await supabase.from("campaigns").select("*").eq("slug", id).maybeSingle();
+        if (bySlug.data) data = bySlug.data as Campaign;
+        if (!data && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+          const byId = await supabase.from("campaigns").select("*").eq("id", id).maybeSingle();
+          if (byId.data) data = byId.data as Campaign;
+        }
+        if (!ativo) return;
+        if (!data) setErro("Campanha não encontrada ou ainda não disponível publicamente.");
+        else setCampanha(data);
+      } catch {
+        if (ativo) setErro("Não foi possível carregar esta campanha agora.");
+      } finally {
+        if (ativo) setCarregando(false);
       }
-
-      setCampanha(data as Campaign);
-      setCarregando(false);
     }
-
-    carregar();
+    if (id) carregar();
+    return () => { ativo = false; };
   }, [id]);
 
-  if (carregando) {
-    return (
-      <div style={{ padding: "40px", textAlign: "center" }}>Carregando...</div>
-    );
-  }
+  if (carregando) return <div className="page-shell"><Header /><div className="container" style={{ padding: 48, textAlign: "center" }}>Carregando campanha…</div></div>;
 
-  if (erro || !campanha) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
-        <Header />
-        <main style={{ maxWidth: "700px", margin: "40px auto", padding: "24px", textAlign: "center" }}>
-          <h1>Campanha não encontrada</h1>
-          <Link href="/campanhas" style={{ color: "#16a34a" }}>
-            Ver todas as campanhas
-          </Link>
-        </main>
-      </div>
-    );
-  }
+  if (erro || !campanha) return <div className="page-shell"><Header /><main className="container" style={{ padding: "70px 20px", textAlign: "center" }}><div aria-hidden="true" style={{ fontSize: 48 }}>🌱</div><h1>Não encontramos essa campanha.</h1><p className="muted">{erro || "Tente novamente."}</p><Link href="/campanhas" className="btn btn-primary" style={{ marginTop: 12 }}>Explorar campanhas</Link></main></div>;
 
-  const percentual = Math.min(
-    100,
-    Math.round((campanha.current_amount / campanha.goal_amount) * 100)
-  );
+  const ativa = campanha.status === "active";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
+    <div className="page-shell">
       <Header />
-
-      <main style={{ maxWidth: "800px", margin: "0 auto", padding: "32px 24px" }}>
-        <Link
-          href="/campanhas"
-          style={{ color: "#64748b", fontSize: "14px", textDecoration: "none" }}
-        >
-          ← Voltar às campanhas
-        </Link>
-
-        <article
-          style={{
-            background: "white",
-            border: "1px solid #e2e8f0",
-            borderRadius: "16px",
-            padding: "32px",
-            marginTop: "20px",
-          }}
-        >
-          {campanha.category && (
-            <span
-              style={{
-                display: "inline-block",
-                background: "#f0fdf4",
-                color: "#166534",
-                padding: "4px 10px",
-                borderRadius: "20px",
-                fontSize: "13px",
-                marginBottom: "12px",
-              }}
-            >
-              {campanha.category}
-            </span>
-          )}
-
-          <h1 style={{ margin: "0 0 16px", fontSize: "28px" }}>
-            {campanha.title}
-          </h1>
-
-          <div
-            style={{
-              height: "12px",
-              background: "#e2e8f0",
-              borderRadius: "8px",
-              overflow: "hidden",
-              marginBottom: "12px",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${percentual}%`,
-                background: "#16a34a",
-                transition: "width 0.3s ease",
-              }}
-            />
+      <main className="container" style={{ maxWidth: 900, paddingTop: 32, paddingBottom: 72 }}>
+        <Link href="/campanhas" style={{ color: "var(--green-800)", fontSize: 14, textDecoration: "none", fontWeight: 700 }}>← Todas as campanhas</Link>
+        <article className="card" style={{ overflow: "hidden", marginTop: 20 }}>
+          <div style={{ height: "clamp(190px, 32vw, 330px)", background: campanha.image_url ? `linear-gradient(0deg, rgba(18,60,43,.08), transparent), url("${campanha.image_url}") center/cover` : "linear-gradient(135deg, #e1f2e5, #f8edda)", display: "grid", placeItems: "center" }}>
+            {!campanha.image_url && <span aria-hidden="true" style={{ fontSize: 78 }}>{campanha.category === "animais" ? "🐾" : campanha.category === "saude" ? "💚" : "🤝"}</span>}
           </div>
-
-          <p style={{ fontSize: "18px", marginBottom: "8px" }}>
-            <strong>
-              R${" "}
-              {Number(campanha.current_amount).toLocaleString("pt-BR", {
-                minimumFractionDigits: 2,
-              })}
-            </strong>{" "}
-            arrecadados de R${" "}
-            {Number(campanha.goal_amount).toLocaleString("pt-BR", {
-              minimumFractionDigits: 2,
-            })}
-          </p>
-
-          <p style={{ color: "#64748b", marginBottom: "28px" }}>
-            {percentual}% da meta
-          </p>
-
-          <div
-            style={{
-              whiteSpace: "pre-wrap",
-              lineHeight: 1.7,
-              color: "#334155",
-              marginBottom: "32px",
-            }}
-          >
-            {campanha.description}
+          <div style={{ padding: "clamp(24px, 5vw, 42px)" }}>
+            <span className="eyebrow">{categoryLabel[campanha.category] || "Uma causa importante"}</span>
+            <h1 style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)", lineHeight: 1.12, margin: "16px 0 20px" }}>{campanha.title}</h1>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", color: "var(--muted)", fontSize: 13, marginTop: 10 }}><span>Meta da campanha</span><strong style={{ color: "var(--green-900)", fontSize: 16 }}>{dinheiro(Number(campanha.goal_cents))}</strong></div>
+            <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.85, color: "#3f5147", margin: "28px 0 32px" }}>{campanha.description}</div>
+            {ativa ? (
+              <div style={{ borderRadius: 14, padding: 18, background: "var(--green-50)", border: "1px solid #dcefe1" }}>
+                <strong style={{ color: "var(--green-900)" }}>Quer apoiar esta causa?</strong>
+                <p style={{ margin: "7px 0 0", color: "var(--muted)", lineHeight: 1.6, fontSize: 14 }}>Estamos preparando o fluxo de doações com pagamento seguro. No momento, esta página não recebe pagamentos; não envie dinheiro por fora usando dados que não foram verificados.</p>
+              </div>
+            ) : (
+              <div className="form-message" style={{ background: "#f7f8f7", color: "var(--muted)" }}>Esta campanha ainda não está publicada. O status atual é: {campanha.status === "draft" ? "rascunho" : campanha.status === "pending_review" ? "em análise" : campanha.status}.</div>
+            )}
           </div>
-
-          <button
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: "#16a34a",
-              color: "white",
-              border: 0,
-              borderRadius: "10px",
-              fontWeight: "bold",
-              fontSize: "16px",
-              cursor: "pointer",
-            }}
-            onClick={() =>
-              alert(
-                "A integração de pagamentos (Pix) será implementada na etapa final."
-              )
-            }
-          >
-            Quero doar
-          </button>
-
-          <p
-            style={{
-              textAlign: "center",
-              color: "#94a3b8",
-              fontSize: "13px",
-              marginTop: "16px",
-            }}
-          >
-            Pagamentos reais serão liberados em breve.
-          </p>
         </article>
       </main>
     </div>
