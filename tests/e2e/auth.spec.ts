@@ -112,3 +112,15 @@ test("rate-limited signup exposes a safe retry path", async ({ page }) => {
   await page.getByRole("button", { name: /reenviar e-mail de confirmação/i }).click();
   await expect(page.locator('p[role="alert"]')).toContainText(/limite temporário/i);
 });
+
+test("expired signup callbacks route to the confirmation recovery page", async ({ page }) => {
+  await page.goto("/?type=signup");
+  await expect(page).toHaveURL(/\/auth\/confirm$/);
+  await expect(page.locator('p[role="alert"]')).toContainText(/link pode ter expirado|não encontramos uma sessão/i);
+});
+
+test("password recovery callbacks route to the reset page", async ({ page }) => {
+  await page.goto("/?type=recovery");
+  await expect(page).toHaveURL(/\/auth\/reset-password$/);
+  await expect(page.locator('p[role="alert"]')).toContainText(/link de recuperação é inválido ou expirou/i);
+});
