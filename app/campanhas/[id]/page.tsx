@@ -103,7 +103,7 @@ export default function CampanhaDetalhe() {
                 </> : <div className="form-message" style={{ background: "#f7f8f7", color: "var(--muted)" }}>Esta campanha ainda não está publicada. Status: {campanha.status === "draft" ? "rascunho" : campanha.status === "pending_review" ? "em análise" : campanha.status}.</div>}
               </div>
             </section>
-            <div style={{ marginTop: 14, color: "#78827b", fontSize: 12, lineHeight: 1.6, padding: "0 5px" }}>O total exibido soma o valor inicial informado pelo organizador (não verificado pela plataforma) e as doações registradas como pagas aqui. Pagamentos externos não são incluídos automaticamente. Doações confirmadas nesta plataforma: ${doacoesPagas.length}.</div>
+            <div style={{ marginTop: 14, color: "#78827b", fontSize: 12, lineHeight: 1.6, padding: "0 5px" }}>O total exibido soma o valor inicial informado pelo organizador (não verificado pela plataforma) e as doações registradas como pagas aqui. Pagamentos externos não são incluídos automaticamente. Doações confirmadas nesta plataforma são exibidas separadamente no contador acima.</div>
           </aside>
         </div>
       </main>
