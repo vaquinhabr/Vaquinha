@@ -3,7 +3,11 @@ name: Quality and security checks
 on:
   pull_request:
   push:
-    branches: [main, hardening-auth-ci-20261030]
+    branches: [main]
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
