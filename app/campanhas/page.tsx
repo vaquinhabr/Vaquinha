@@ -19,6 +19,8 @@ export default function Campanhas() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setBusca(params.get("q") ?? "");
+    const categoriaInicial = params.get("category") ?? "todas";
+    if (["saude","educacao","emergencia","animais","projetos","outros"].includes(categoriaInicial)) setCategoria(categoriaInicial);
   }, []);
 
   const campanhasFiltradas = campanhas.filter((campanha) => {
