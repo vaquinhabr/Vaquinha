@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Header from "@/components/Header";
+import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 
 const passos = [
   { numero: "01", titulo: "Conte sua história", texto: "Explique o que aconteceu, por que essa causa importa e como o dinheiro vai ajudar." },
@@ -17,6 +18,7 @@ const causas = [
 export default function Home() {
   return (
     <div className="page-shell">
+      <AuthRedirectHandler />
       <Header />
       <main>
         <section style={{ position: "relative", overflow: "hidden", background: "linear-gradient(125deg, #f0f8f2 0%, #f8faf8 58%, #e4f3e9 100%)" }}>
