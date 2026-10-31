@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import { parseBRLToCents, slugify } from "@/lib/validation.mjs";
@@ -18,8 +18,7 @@ const categorias = [
 
 export default function CriarVaquinhaPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const editId = searchParams.get("editar");
+  const [editId, setEditId] = useState("");
   const [userId, setUserId] = useState("");
   const [step, setStep] = useState(1);
   const [titulo, setTitulo] = useState("");
@@ -31,6 +30,7 @@ export default function CriarVaquinhaPage() {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
+    setEditId(new URLSearchParams(window.location.search).get("editar") || "");
     let ativo = true;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!ativo) return;
