@@ -124,3 +124,28 @@ test("password recovery callbacks route to the reset page", async ({ page }) => 
   await expect(page).toHaveURL(/\/auth\/reset-password$/);
   await expect(page.locator('p[role="alert"]')).toContainText(/link de recuperação é inválido ou expirou/i);
 });
+
+test("signup with email confirmation disabled opens the panel", async ({ page }) => {
+  await mockAuthApi(page);
+  await page.route("**/auth/v1/signup**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        access_token: "test-access-token",
+        token_type: "bearer",
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        refresh_token: "test-refresh-token",
+        user: fakeUser,
+      }),
+    });
+  });
+  await page.goto("/criar-conta");
+  await page.getByLabel("Nome completo").fill("Pessoa de Teste");
+  await page.getByLabel("E-mail").fill("teste@example.com");
+  await page.getByLabel("Crie uma senha").fill("SenhaSegura123");
+  await page.getByRole("button", { name: /criar minha conta/i }).click();
+  await expect(page).toHaveURL(/\\/painel$/);
+  await expect(page.getByRole("heading", { name: /olá,/i })).toBeVisible();
+});
