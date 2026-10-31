@@ -57,7 +57,7 @@ export default function Campanhas() {
             <h1 style={{ margin: "12px 0 8px", fontSize: "clamp(2.2rem, 4vw, 3.2rem)" }}>Campanhas que aproximam.</h1>
             <p className="muted" style={{ margin: 0, lineHeight: 1.7 }}>Conheça causas reais e encontre uma forma de fazer parte delas.</p>
           </div>
-          <Link href="/campanhas/nova" className="btn btn-primary">Criar campanha ↗</Link>
+          <Link href="/criar-vaquinha" className="btn btn-primary">Criar campanha ↗</Link>
         </div>
 
         <section aria-label="Filtros de campanhas" className="card" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(190px, 240px)", gap: 12, padding: 16, marginBottom: 28 }}>
@@ -81,7 +81,7 @@ export default function Campanhas() {
               <div aria-hidden="true" style={{ fontSize: 54, marginBottom: 16 }}>🌱</div>
               <h2 style={{ margin: "0 0 10px" }}>Toda grande mudança começa com uma história.</h2>
               <p className="muted" style={{ maxWidth: 500, margin: "0 auto 22px", lineHeight: 1.7 }}>Ainda não há campanhas publicadas. Você pode ser a primeira pessoa a compartilhar uma causa por aqui.</p>
-              <Link href="/criar-conta" className="btn btn-primary">Começar minha vaquinha</Link>
+              <Link href="/criar-vaquinha" className="btn btn-primary">Começar minha vaquinha</Link>
             </div>
           ) : campanhasFiltradas.length === 0 ? (
             <div className="card" style={{ padding: "44px 24px", textAlign: "center" }}>
