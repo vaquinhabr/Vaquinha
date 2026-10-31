@@ -14,8 +14,8 @@ const categories = [
   { name: "Animais", icon: "🐾", query: "animais" },
   { name: "Emergência", icon: "🤝", query: "emergencia" },
   { name: "Educação", icon: "📚", query: "educacao" },
-  { name: "Moradia", icon: "⌂", query: "moradia" },
-  { name: "Esporte", icon: "⚽", query: "esporte" },
+  { name: "Projetos sociais", icon: "🌱", query: "projetos" },
+  { name: "Outros", icon: "♡", query: "outros" },
 ];
 
 export default function Home() {
