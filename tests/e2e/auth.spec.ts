@@ -53,7 +53,7 @@ test("signup validates required data before making a request", async ({ page }) 
   await mockAuthApi(page);
   await page.goto("/criar-conta");
   await page.getByRole("button", { name: /criar minha conta/i }).click();
-  await expect(page.getByRole("alert")).toContainText(/nome|e-mail|senha/i);
+  await expect(page.locator('p[role="alert"]')).toContainText(/nome|e-mail|senha/i);
 });
 
 test("signup success shows email confirmation instructions", async ({ page }) => {
@@ -74,7 +74,7 @@ test("login reports invalid credentials clearly", async ({ page }) => {
   await page.getByLabel("E-mail").fill("teste@example.com");
   await page.getByLabel("Senha").fill("senha-errada");
   await page.getByRole("button", { name: /entrar na minha conta/i }).click();
-  await expect(page.getByRole("alert")).toContainText(/e-mail ou senha incorretos/i);
+  await expect(page.locator('p[role="alert"]')).toContainText(/e-mail ou senha incorretos/i);
 });
 
 test("login success opens the protected panel", async ({ page }) => {
@@ -107,8 +107,8 @@ test("rate-limited signup exposes a safe retry path", async ({ page }) => {
   await page.getByLabel("E-mail").fill("teste@example.com");
   await page.getByLabel("Crie uma senha").fill("SenhaSegura123");
   await page.getByRole("button", { name: /criar minha conta/i }).click();
-  await expect(page.getByRole("alert")).toContainText(/limite temporário/i);
+  await expect(page.locator('p[role="alert"]')).toContainText(/limite temporário/i);
   await expect(page.getByRole("button", { name: /reenviar e-mail de confirmação/i })).toBeVisible();
   await page.getByRole("button", { name: /reenviar e-mail de confirmação/i }).click();
-  await expect(page.getByRole("alert")).toContainText(/limite temporário/i);
+  await expect(page.locator('p[role="alert"]')).toContainText(/limite temporário/i);
 });
