@@ -58,7 +58,7 @@ export default function Header() {
           ) : (
             <>
               <Link href="/entrar" className="hide-mobile" style={{ color: "var(--ink)", textDecoration: "none", fontSize: 14, fontWeight: 700 }}>Entrar</Link>
-              <Link href="/criar-conta" className="btn btn-primary" style={{ minHeight: 42, padding: "10px 17px", fontSize: 14 }}>Criar vaquinha <span aria-hidden="true">↗</span></Link>
+              <Link href="/criar-vaquinha" className="btn btn-primary" style={{ minHeight: 42, padding: "10px 17px", fontSize: 14 }}>Criar vaquinha <span aria-hidden="true">↗</span></Link>
             </>
           ))}
         </nav>
