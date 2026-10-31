@@ -35,7 +35,7 @@ export default function AdminPage() {
     const { data, error } = await supabase.functions.invoke("admin-api", { body: { action, ...payload } });
     if (error) {
       let detail = error.message || "Falha ao acessar o painel administrativo.";
-      try { const payload = await error.context.json(); if (payload?.error) detail = payload.error; } catch { /* response may already be consumed */ }
+      try { const ctx = (error as { context?: unknown }).context; if (ctx instanceof Response) { const payload = await ctx.clone().json(); if (payload?.error) detail = payload.error; } } catch { /* response may not contain JSON */ }
       throw new Error(detail);
     }
     if (data?.error) throw new Error(data.error);
