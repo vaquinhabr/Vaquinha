@@ -96,7 +96,7 @@ test("password recovery displays a privacy-preserving confirmation", async ({ pa
 });
 
 test("rate-limited signup exposes a safe retry path", async ({ page }) => {
-  await page.route("**/auth/v1/signup", async (route) => {
+  await page.route("**/auth/v1/signup**", async (route) => {
     await route.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ code: "over_email_send_rate_limit", msg: "email rate limit exceeded" }) });
   });
   await page.route("**/auth/v1/resend**", async (route) => {
