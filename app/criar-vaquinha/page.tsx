@@ -26,6 +26,7 @@ export default function CriarVaquinhaPage() {
   const [categoria, setCategoria] = useState("emergencia");
   const [descricao, setDescricao] = useState("");
   const [imagem, setImagem] = useState<File | null>(null);
+  const [imagemExistente, setImagemExistente] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -52,7 +53,7 @@ export default function CriarVaquinhaPage() {
       setMeta((Number(data.goal_cents) / 100).toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2}));
       setCategoria(data.category);
       setDescricao(data.description);
-      if (data.image_url) setImagem(null);
+      setImagemExistente(Boolean(data.image_url));
       setStep(1);
     }
     carregarRascunho().catch(() => { if (ativo) setErro("Não foi possível carregar a campanha."); });
@@ -128,7 +129,7 @@ export default function CriarVaquinhaPage() {
             </div> : <div className="create-fields">
               <div className="create-section-title"><h2>Conte sua história</h2><p>Explique o que aconteceu e como o apoio fará diferença.</p></div>
               <label className="create-label" htmlFor="descricao">Sua história <em>*</em><textarea id="descricao" value={descricao} onChange={e=>setDescricao(e.target.value)} required minLength={20} maxLength={10000} rows={8} placeholder="Conte sua história com suas palavras. Explique por que precisa de ajuda e como o dinheiro será usado."/><small>{descricao.length}/10.000 caracteres · Seja sincero e específico.</small></label>
-              <label className="create-label" htmlFor="imagem">Foto de capa (opcional)<input id="imagem" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setImagem(e.target.files?.[0] ?? null)} /><small>JPG, PNG ou WebP · máximo de 5 MB. {imagem ? `Selecionada: ${imagem.name}` : "A imagem será enviada com segurança ao armazenamento da plataforma."}</small>{imagem && <button type="button" className="create-secondary" onClick={()=>setImagem(null)} style={{alignSelf:"flex-start",marginTop:8}}>Remover imagem</button>}</label>
+              <label className="create-label" htmlFor="imagem">Foto de capa (opcional)<input id="imagem" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setImagem(e.target.files?.[0] ?? null)} /><small>JPG, PNG ou WebP · máximo de 5 MB. {imagem ? `Selecionada: ${imagem.name}` : imagemExistente ? "Esta campanha já tem uma capa. Selecione outra para substituí-la." : "A imagem será enviada com segurança ao armazenamento da plataforma."}</small>{imagem && <button type="button" className="create-secondary" onClick={()=>setImagem(null)} style={{alignSelf:"flex-start",marginTop:8}}>Remover imagem</button>}</label>
               <div className="create-review"><span>♡</span><div><strong>Quase lá!</strong><p>Sua vaquinha será salva como rascunho para você revisar. Ela não ficará pública automaticamente.</p></div></div>
               <div className="create-form-actions"><button type="button" className="create-secondary" onClick={()=>{setStep(1);setErro("");}}>← Voltar</button><button type="submit" className="create-primary" disabled={salvando}>{salvando ? "Salvando..." : editId ? "Salvar alterações ↗" : "Salvar minha vaquinha ↗"}</button></div>
             </div>}
