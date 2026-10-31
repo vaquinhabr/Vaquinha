@@ -33,8 +33,8 @@ O arquivo `supabase/schema.sql` documenta o esquema atual e as permissões míni
 ### 4. Autenticação em produção
 
 - Site URL: `https://vaquinha-zeta.vercel.app`
-- Redirect URLs: `https://vaquinha-zeta.vercel.app/**`
-- O app usa `/auth/confirm` para confirmar cadastro e `/auth/reset-password` para redefinir senha.
+- Redirect URLs: inclua `https://vaquinha-zeta.vercel.app/**` se for usar callbacks diretos por caminho.
+- O fluxo atual retorna primeiro ao Site URL do Supabase e, depois de processar os tokens, encaminha para `/auth/confirm` ou `/auth/reset-password`.
 - Configure SMTP próprio no Supabase antes de abrir o cadastro ao público; o envio padrão é limitado e destinado a testes.
 
 ## Páginas
