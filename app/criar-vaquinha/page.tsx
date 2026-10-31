@@ -24,7 +24,7 @@ export default function CriarVaquinhaPage() {
   const [meta, setMeta] = useState("");
   const [categoria, setCategoria] = useState("emergencia");
   const [descricao, setDescricao] = useState("");
-  const [imagem, setImagem] = useState("");
+  const [imagem, setImagem] = useState<File | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -46,13 +46,21 @@ export default function CriarVaquinhaPage() {
     if (cents === null || cents < 100) { setErro("Informe uma meta válida de pelo menos R$ 1,00."); setStep(1); return; }
     if (titulo.trim().length < 5 || titulo.trim().length > 120) { setErro("O título precisa ter entre 5 e 120 caracteres."); setStep(1); return; }
     if (descricao.trim().length < 20 || descricao.trim().length > 10000) { setErro("Conte sua história com pelo menos 20 caracteres."); setStep(2); return; }
-    if (imagem.trim() && !/^https:\/\//i.test(imagem.trim())) { setErro("A imagem precisa usar um endereço https:// válido."); setStep(2); return; }
+    if (imagem && (!["image/jpeg", "image/png", "image/webp"].includes(imagem.type) || imagem.size > 5 * 1024 * 1024)) { setErro("Escolha uma imagem JPG, PNG ou WebP de até 5 MB."); setStep(2); return; }
     setSalvando(true);
     try {
+      let imageUrl: string | null = null;
+      if (imagem) {
+        const extension = imagem.type === "image/jpeg" ? "jpg" : imagem.type === "image/png" ? "png" : "webp";
+        const path = `${userId}/${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await supabase.storage.from("campaign-images").upload(path, imagem, { contentType: imagem.type, upsert: false });
+        if (uploadError) throw uploadError;
+        imageUrl = supabase.storage.from("campaign-images").getPublicUrl(path).data.publicUrl;
+      }
       const slug = `${slugify(titulo) || "campanha"}-${crypto.randomUUID().slice(0, 8)}`;
       const { data, error } = await supabase.from("campaigns").insert({
         owner_id: userId, title: titulo.trim(), slug, description: descricao.trim(),
-        goal_cents: cents, category: categoria, image_url: imagem.trim() || null, status: "draft",
+        goal_cents: cents, category: categoria, image_url: imageUrl, status: "draft",
       }).select("id,slug").single();
       if (error) throw error;
       router.push("/painel?created=1");
@@ -90,7 +98,7 @@ export default function CriarVaquinhaPage() {
             </div> : <div className="create-fields">
               <div className="create-section-title"><h2>Conte sua história</h2><p>Explique o que aconteceu e como o apoio fará diferença.</p></div>
               <label className="create-label" htmlFor="descricao">Sua história <em>*</em><textarea id="descricao" value={descricao} onChange={e=>setDescricao(e.target.value)} required minLength={20} maxLength={10000} rows={8} placeholder="Conte sua história com suas palavras. Explique por que precisa de ajuda e como o dinheiro será usado."/><small>{descricao.length}/10.000 caracteres · Seja sincero e específico.</small></label>
-              <label className="create-label" htmlFor="imagem">Link da foto de capa (opcional)<input id="imagem" value={imagem} onChange={e=>setImagem(e.target.value)} type="url" placeholder="https://..." /><small>Use um endereço público de imagem. Você poderá adicionar ou trocar a foto depois.</small></label>
+              <label className="create-label" htmlFor="imagem">Foto de capa (opcional)<input id="imagem" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setImagem(e.target.files?.[0] ?? null)} /><small>JPG, PNG ou WebP · máximo de 5 MB. {imagem ? `Selecionada: ${imagem.name}` : "A imagem será enviada com segurança ao armazenamento da plataforma."}</small>{imagem && <button type="button" className="create-secondary" onClick={()=>setImagem(null)} style={{alignSelf:"flex-start",marginTop:8}}>Remover imagem</button>}</label>
               <div className="create-review"><span>♡</span><div><strong>Quase lá!</strong><p>Sua vaquinha será salva como rascunho para você revisar. Ela não ficará pública automaticamente.</p></div></div>
               <div className="create-form-actions"><button type="button" className="create-secondary" onClick={()=>{setStep(1);setErro("");}}>← Voltar</button><button type="submit" className="create-primary" disabled={salvando}>{salvando?"Salvando...":"Salvar minha vaquinha ↗"}</button></div>
             </div>}
