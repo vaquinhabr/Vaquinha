@@ -74,18 +74,38 @@ Deno.serve(async (req: Request) => {
     if (action === "listCampaigns") {
       const { data: campaigns, error } = await admin
         .from("campaigns")
-        .select("id,title,description,user_id,status,goal_amount,current_amount,created_at")
+        .select("id,title,description,owner_id,status,goal_cents,initial_raised_cents,created_at,image_url")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
-      const ids = [...new Set((campaigns ?? []).map((c) => c.user_id).filter(Boolean))];
-      const { data: profiles, error: profilesError } = ids.length
-        ? await admin.from("profiles").select("id,full_name").in("id", ids)
+      const ownerIds = [...new Set((campaigns ?? []).map((c) => c.owner_id).filter(Boolean))];
+      const { data: profiles, error: profilesError } = ownerIds.length
+        ? await admin.from("profiles").select("id,display_name").in("id", ownerIds)
         : { data: [], error: null };
       if (profilesError) throw profilesError;
-      const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name ?? ""]));
+      const names = new Map((profiles ?? []).map((p) => [p.id, p.display_name ?? ""]));
+      const campaignIds = (campaigns ?? []).map((c) => c.id);
+      const { data: donations, error: donationsError } = campaignIds.length
+        ? await admin.from("donations").select("campaign_id,amount_cents").in("campaign_id", campaignIds).eq("status", "paid")
+        : { data: [], error: null };
+      if (donationsError) throw donationsError;
+      const raised = new Map<string, number>();
+      for (const donation of donations ?? []) {
+        raised.set(donation.campaign_id, (raised.get(donation.campaign_id) ?? 0) + Number(donation.amount_cents ?? 0));
+      }
       return response({
-        campaigns: (campaigns ?? []).map((c) => ({ ...c, owner_name: names.get(c.user_id) ?? "" })),
+        campaigns: (campaigns ?? []).map((c) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          user_id: c.owner_id,
+          owner_name: names.get(c.owner_id) ?? "",
+          status: c.status,
+          goal_amount: Number(c.goal_cents ?? 0) / 100,
+          current_amount: (Number(c.initial_raised_cents ?? 0) + (raised.get(c.id) ?? 0)) / 100,
+          created_at: c.created_at,
+          image_url: c.image_url ?? null,
+        })),
       }, 200, origin);
     }
 
@@ -111,18 +131,33 @@ Deno.serve(async (req: Request) => {
       const id = String(body.id ?? "");
       const fields: Record<string, unknown> = {};
       if (typeof body.status === "string") {
-        if (!["draft", "active", "paused", "completed", "cancelled"].includes(body.status)) {
+        if (!["draft", "pending_review", "active", "paused", "completed", "rejected"].includes(body.status)) {
           return response({ error: "Status inválido." }, 400, origin);
         }
         fields.status = body.status;
       }
       if (typeof body.title === "string") {
         const title = body.title.trim();
-        if (title.length < 3 || title.length > 120) return response({ error: "O título deve ter entre 3 e 120 caracteres." }, 400, origin);
+        if (title.length < 5 || title.length > 120) return response({ error: "O título deve ter entre 5 e 120 caracteres." }, 400, origin);
         fields.title = title;
       }
+      if (typeof body.description === "string") {
+        const description = body.description.trim();
+        if (description.length < 20 || description.length > 10000) return response({ error: "A descrição deve ter entre 20 e 10.000 caracteres." }, 400, origin);
+        fields.description = description;
+      }
+      if (body.goal_amount !== undefined) {
+        const goal = Number(body.goal_amount);
+        if (!Number.isFinite(goal) || goal < 1 || goal > 100000000) return response({ error: "A meta deve ser maior que zero." }, 400, origin);
+        fields.goal_cents = Math.round(goal * 100);
+      }
+      if (body.image_url === null || typeof body.image_url === "string") {
+        const imageUrl = typeof body.image_url === "string" ? body.image_url.trim() : "";
+        if (imageUrl && !/^https?:\/\//i.test(imageUrl)) return response({ error: "URL da imagem inválida." }, 400, origin);
+        fields.image_url = imageUrl || null;
+      }
       if (!id || Object.keys(fields).length === 0) return response({ error: "Informe a campanha e os campos válidos." }, 400, origin);
-      const { data, error } = await admin.from("campaigns").update(fields).eq("id", id).select("id,title,status").single();
+      const { data, error } = await admin.from("campaigns").update(fields).eq("id", id).select("id,title,status,description,goal_cents,image_url").single();
       if (error) throw error;
       return response({ campaign: data }, 200, origin);
     }
