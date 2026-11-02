@@ -36,7 +36,7 @@ export default function DoarCampanhaPage() {
   useEffect(() => {
     let active = true;
     async function load() {
-      let query = supabase.from("campaigns").select("id,title,status,slug").eq("id", routeId);
+      const query = supabase.from("campaigns").select("id,title,status,slug").eq("id", routeId);
       let { data } = await query.maybeSingle();
       if (!data) {
         const bySlug = await supabase.from("campaigns").select("id,title,status,slug").eq("slug", routeId).maybeSingle();
