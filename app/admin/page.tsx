@@ -91,7 +91,7 @@ export default function AdminPage() {
     if (editTitle.trim().length < 5 || editTitle.trim().length > 120) { setError("O título deve ter entre 5 e 120 caracteres."); return; }
     if (editDescription.trim().length < 20 || editDescription.trim().length > 10000) { setError("A descrição deve ter entre 20 e 10.000 caracteres."); return; }
     if (!Number.isFinite(goal) || goal < 1) { setError("Informe uma meta válida maior que zero."); return; }
-    if (editImageUrl.trim() && !/^https?:\\/\\//i.test(editImageUrl.trim())) { setError("A foto precisa ser um link começando com https:// ou http://."); return; }
+    if (editImageUrl.trim()) { try { const url = new URL(editImageUrl.trim()); if (!["http:", "https:"].includes(url.protocol)) throw new Error(); } catch { setError("Informe um link válido de imagem começando com https:// ou http://."); return; } }
     setSavingEdit(true); setError(""); setMessage("");
     try {
       await callAdmin("updateCampaign", { id: editing.id, title: editTitle.trim(), description: editDescription.trim(), goal_amount: goal, image_url: editImageUrl.trim() || null });
