@@ -98,8 +98,8 @@ export default function CampanhaDetalhe() {
               <div style={{ marginTop: 20, padding: "13px 14px", borderRadius: 10, background: "#f0f8f1", color: "#2e6843", fontSize: 12, lineHeight: 1.55 }}><strong>Transparência</strong><div style={{ marginTop: 4 }}>Meta definida pelo organizador. O total inclui o valor inicial informado, que não foi verificado pela plataforma, e as doações confirmadas registradas aqui.</div></div><div style={{ borderTop: "1px solid #edf0ed", marginTop: 22, paddingTop: 20 }}>
                 {ativa ? <>
                   <strong style={{ color: "#202a24", fontSize: 16 }}>Faça parte dessa corrente de apoio</strong>
-                  <p style={{ color: "#66716a", fontSize: 13, lineHeight: 1.65, margin: "8px 0 0" }}>Ajude esta história a chegar a mais pessoas. A contribuição online será disponibilizada quando a integração de pagamentos estiver ativa.</p>
-                  <button type="button" disabled style={{ width: "100%", marginTop: 16, opacity: .65, cursor: "not-allowed" }} className="btn btn-primary">Doações em breve</button>
+                  <p style={{ color: "#66716a", fontSize: 13, lineHeight: 1.65, margin: "8px 0 0" }}>Escolha um valor e gere seu Pix. A arrecadação será atualizada após a confirmação do pagamento.</p>
+                  <Link href={`/campanhas/${campanha.slug || campanha.id}/doar`} className="btn btn-primary" style={{ width: "100%", marginTop: 16, justifyContent: "center" }}>Doar com Pix</Link>
                 </> : <div className="form-message" style={{ background: "#f7f8f7", color: "var(--muted)" }}>Esta campanha ainda não está publicada. Status: {campanha.status === "draft" ? "rascunho" : campanha.status === "pending_review" ? "em análise" : campanha.status}.</div>}
               </div>
             </section>
