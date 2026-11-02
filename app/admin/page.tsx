@@ -166,7 +166,7 @@ export default function AdminPage() {
               </table>
               {!visibleUsers.length && <p>Nenhum usuário encontrado.</p>}
             </div>
-          ) : (
+          ) : tab === "campaigns" ? (
             <div style={{ overflowX: "auto" }}>
               <table style={tableStyle}>
                 <thead><tr><th style={thStyle}>Campanha</th><th style={thStyle}>Responsável</th><th style={thStyle}>Meta</th><th style={thStyle}>Arrecadado</th><th style={thStyle}>Status</th><th style={thStyle}>Ações</th></tr></thead>
