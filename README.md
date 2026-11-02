@@ -48,6 +48,25 @@ O arquivo `supabase/schema.sql` documenta o esquema atual e as permissões míni
 - `/campanhas/[id]` — Página pública
 - `/campanhas/[id]/editar` — Editar campanha
 
+## Eleva Payments (Pix)
+
+A integração de pagamentos fica no servidor. Configure estas variáveis no ambiente **Production** e **Preview** da Vercel:
+
+- `ELEVA_API_TOKEN`: token secreto da Eleva (não usar prefixo `NEXT_PUBLIC_`).
+- `ELEVA_CLIENT_ID`: Client ID da credencial da Eleva.
+- `ELEVA_WEBHOOK_URL`: URL pública `https://SEU-DOMINIO/api/webhooks/eleva`.
+- `SUPABASE_SERVICE_ROLE_KEY`: chave de serviço do Supabase, somente no servidor.
+
+Antes de habilitar doações reais:
+
+1. Revise e aplique `supabase/migrations/20261101_eleva_payments.sql` no banco correto.
+2. Publique a Edge Function atualizada do painel: `supabase functions deploy admin-api`.
+3. Configure a URL de webhook na credencial ou no painel da Eleva para apontar para `ELEVA_WEBHOOK_URL`.
+4. Confira os nomes exatos dos campos de QR Code e Pix copia e cola na resposta real de `POST /payments/pix` e valide o formato de assinatura com um evento de teste da Eleva.
+5. Faça uma cobrança de baixo valor em ambiente de teste, confirme que o webhook muda a doação para paga e que o painel contabiliza o valor apenas uma vez.
+
+O site só deve considerar a doação arrecadada após um evento válido `deposit.completed`. Nunca compartilhe nem registre tokens secretos em arquivos versionados.
+
 ## Qualidade e testes
 
 ```bash
