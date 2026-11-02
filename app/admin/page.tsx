@@ -10,12 +10,12 @@ type AdminUser = {
 };
 type Campaign = {
   id: string; title: string; description: string; user_id: string; owner_name: string;
-  status: "draft" | "active" | "paused" | "completed" | "cancelled";
+  status: "draft" | "pending_review" | "active" | "paused" | "completed" | "rejected";
   goal_amount: number; current_amount: number; created_at: string;
 };
 
 const statusLabels: Record<Campaign["status"], string> = {
-  draft: "Rascunho", active: "Ativa", paused: "Pausada", completed: "Concluída", cancelled: "Cancelada",
+  draft: "Rascunho", pending_review: "Aguardando análise", active: "Ativa", paused: "Pausada", completed: "Concluída", rejected: "Rejeitada",
 };
 const money = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
 const date = (value: string | null) => value ? new Date(value).toLocaleDateString("pt-BR") : "—";
