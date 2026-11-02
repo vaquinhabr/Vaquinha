@@ -52,9 +52,9 @@ export async function POST(request: Request) {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const uniqueEventId = eventId || String(payload.id || (eventName + ":" + (providerId || reference) + ":" + timestamp));
-    const { error: eventError } = await supabase.from("payment_webhook_events").insert({ id: uniqueEventId, event_type: eventName, payload });
-    if (eventError?.code === "23505") return NextResponse.json({ ok: true, duplicate: true });
-    if (eventError) throw eventError;
+    const { data: existingEvent, error: existingEventError } = await supabase.from("payment_webhook_events").select("id").eq("id", uniqueEventId).maybeSingle();
+    if (existingEventError) throw existingEventError;
+    if (existingEvent) return NextResponse.json({ ok: true, duplicate: true });
 
     let query = supabase.from("donations").select("id,status").limit(1);
     query = reference ? query.eq("id", reference) : query.eq("provider_payment_id", providerId);
@@ -72,7 +72,11 @@ export async function POST(request: Request) {
     if (status === "paid") update.paid_at = new Date().toISOString();
     const { error: updateError } = await supabase.from("donations").update(update).eq("id", donation.id);
     if (updateError) throw updateError;
-    return NextResponse.json({ ok: true });
+    const { error: eventInsertError } = await supabase.from("payment_webhook_events").insert({
+      id: uniqueEventId, event_type: eventName, payload,
+    });
+    if (eventInsertError && eventInsertError.code !== "23505") throw eventInsertError;
+    return NextResponse.json({ ok: true, duplicate: eventInsertError?.code === "23505" });
   } catch (error) {
     console.error("Eleva webhook processing failed", error instanceof Error ? error.message : "unknown error");
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
