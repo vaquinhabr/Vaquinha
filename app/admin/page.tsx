@@ -11,7 +11,7 @@ type AdminUser = {
 type Campaign = {
   id: string; title: string; description: string; user_id: string; owner_name: string;
   status: "draft" | "pending_review" | "active" | "paused" | "completed" | "rejected";
-  goal_amount: number; current_amount: number; created_at: string;
+  goal_amount: number; current_amount: number; created_at: string; image_url: string | null;
 };
 
 const statusLabels: Record<Campaign["status"], string> = {
@@ -22,6 +22,12 @@ const date = (value: string | null) => value ? new Date(value).toLocaleDateStrin
 
 export default function AdminPage() {
   const [tab, setTab] = useState<"users" | "campaigns">("users");
+  const [editing, setEditing] = useState<Campaign | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editGoal, setEditGoal] = useState("0");
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [query, setQuery] = useState("");
@@ -73,12 +79,25 @@ export default function AdminPage() {
     } finally { setBusy(""); }
   }
 
-  async function editCampaign(c: Campaign) {
-    const title = window.prompt("Título da campanha:", c.title);
-    if (title === null) return;
-    const trimmed = title.trim();
-    if (trimmed.length < 3) { setError("O título precisa ter pelo menos 3 caracteres."); return; }
-    await perform(c.id, "updateCampaign", { id: c.id, title: trimmed });
+  function editCampaign(c: Campaign) {
+    setEditing(c); setEditTitle(c.title); setEditDescription(c.description ?? "");
+    setEditGoal(String(c.goal_amount ?? 0)); setEditImageUrl(c.image_url ?? "");
+    setError(""); setMessage("");
+  }
+
+  async function saveCampaignEdit() {
+    if (!editing) return;
+    const goal = Number(editGoal);
+    if (editTitle.trim().length < 5 || editTitle.trim().length > 120) { setError("O título deve ter entre 5 e 120 caracteres."); return; }
+    if (editDescription.trim().length < 20 || editDescription.trim().length > 10000) { setError("A descrição deve ter entre 20 e 10.000 caracteres."); return; }
+    if (!Number.isFinite(goal) || goal < 1) { setError("Informe uma meta válida maior que zero."); return; }
+    if (editImageUrl.trim() && !/^https?:\\/\\//i.test(editImageUrl.trim())) { setError("A foto precisa ser um link começando com https:// ou http://."); return; }
+    setSavingEdit(true); setError(""); setMessage("");
+    try {
+      await callAdmin("updateCampaign", { id: editing.id, title: editTitle.trim(), description: editDescription.trim(), goal_amount: goal, image_url: editImageUrl.trim() || null });
+      setMessage("Campanha atualizada com sucesso."); setEditing(null); await refresh();
+    } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível atualizar a campanha."); }
+    finally { setSavingEdit(false); }
   }
 
   async function signOut() {
@@ -151,7 +170,7 @@ export default function AdminPage() {
                   <td style={tdStyle}>{money(c.goal_amount)}</td><td style={tdStyle}>{money(c.current_amount)}</td>
                   <td style={tdStyle}><select value={c.status} disabled={busy === c.id} onChange={e => void perform(c.id, "updateCampaign", { id: c.id, status: e.target.value }, "Alterar o status desta campanha?")} style={inputStyle}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td>
                   <td style={tdStyle}><div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <button disabled={busy === c.id} onClick={() => void editCampaign(c)} style={buttonStyle}>Editar título</button>
+                    <button disabled={busy === c.id} onClick={() => editCampaign(c)} style={buttonStyle}>Editar campanha</button>
                     <button disabled={busy === c.id} onClick={() => void perform(c.id, "deleteCampaign", { id: c.id }, "Excluir esta campanha permanentemente? Esta ação não pode ser desfeita.")} style={{ ...buttonStyle, color: "#a52a2a", borderColor: "#f0c8c5" }}>Excluir</button>
                   </div></td>
                 </tr>)}</tbody>
@@ -160,6 +179,21 @@ export default function AdminPage() {
             </div>
           )}
           <p style={{ margin: "18px 0 0", color: "#718075", fontSize: 12 }}>Listagem limitada aos primeiros 1.000 usuários e 500 campanhas. A autorização é verificada no servidor em cada ação.</p>
+          {editing && <div role="dialog" aria-modal="true" aria-labelledby="edit-campaign-heading" style={modalBackdropStyle}>
+            <section style={modalStyle}>
+              <h2 id="edit-campaign-heading" style={{ marginTop: 0 }}>Editar campanha</h2>
+              <label style={labelStyle}>Título<input value={editTitle} onChange={e => setEditTitle(e.target.value)} maxLength={120} style={inputStyle}/></label>
+              <label style={labelStyle}>Descrição<textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} rows={6} maxLength={10000} style={{ ...inputStyle, resize: "vertical" }}/></label>
+              <label style={labelStyle}>Meta de arrecadação (R$)<input type="number" min="1" step="0.01" value={editGoal} onChange={e => setEditGoal(e.target.value)} style={inputStyle}/></label>
+              <label style={labelStyle}>Foto da campanha — URL da imagem<input type="url" value={editImageUrl} onChange={e => setEditImageUrl(e.target.value)} placeholder="https://..." style={inputStyle}/></label>
+              {editImageUrl && <img src={editImageUrl} alt="Prévia da campanha" style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 10, marginTop: 8 }} onError={e => { e.currentTarget.style.display = "none"; }} />}
+              <p style={{ color: "#617267", fontSize: 12 }}>Cole o link público da foto. O arquivo precisa estar hospedado em um endereço acessível pela internet.</p>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 18 }}>
+                <button disabled={savingEdit} onClick={() => setEditing(null)} style={buttonStyle}>Cancelar</button>
+                <button disabled={savingEdit} onClick={() => void saveCampaignEdit()} style={{ ...buttonStyle, background: "#267247", color: "#fff" }}>{savingEdit ? "Salvando…" : "Salvar alterações"}</button>
+              </div>
+            </section>
+          </div>}
         </section>
       </div>
     </main>
@@ -177,3 +211,7 @@ const tdStyle: React.CSSProperties = { padding: "14px 10px", borderBottom: "1px 
 const smallStyle: React.CSSProperties = { display: "block", marginTop: 4, color: "#758379", fontSize: 11, overflowWrap: "anywhere" };
 const noticeStyle: React.CSSProperties = { padding: 12, background: "#e9f7ed", color: "#225c39", borderRadius: 9 };
 const tabStyle = (active: boolean): React.CSSProperties => ({ border: active ? "1px solid #267247" : "1px solid #d9e4da", background: active ? "#267247" : "#fff", color: active ? "#fff" : "#225c39", padding: "10px 14px", borderRadius: 10, fontWeight: 700, cursor: "pointer" });
+
+const labelStyle: React.CSSProperties = { display: "grid", gap: 7, marginTop: 14, fontSize: 13, fontWeight: 700 };
+const modalBackdropStyle: React.CSSProperties = { position: "fixed", inset: 0, background: "rgba(8,25,14,.55)", zIndex: 1000, display: "grid", placeItems: "center", padding: 16 };
+const modalStyle: React.CSSProperties = { width: "min(100%, 640px)", maxHeight: "90vh", overflowY: "auto", background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 20px 70px rgba(0,0,0,.25)" };
