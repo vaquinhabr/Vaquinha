@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     if (!campaign || campaign.status !== "active") return json({ error: "Esta campanha não está disponível para receber doações." }, 404);
 
     const donationId = crypto.randomUUID();
-    const idempotencyKey = "vaquinha-" + donationId;
+    const idempotencyKey = donationId;
     const description = ("Doação para: " + String(campaign.title)).slice(0, 500);
     const { error: insertError } = await supabase.from("donations").insert({
       id: donationId, campaign_id: campaignId, donor_user_id: null,
@@ -77,10 +77,7 @@ export async function POST(request: Request) {
     const providerId = String(nested.transaction_uuid ?? nested.payment_id ?? nested.id ?? nested.uuid ?? "");
     const { error: updateError } = await supabase.from("donations").update({
       provider_payment_id: providerId || null,
-      metadata: {
-        payer_email: payerEmail, payer_cpf_last4: payerCpf.slice(-4),
-        payer_phone: payerPhone || null, is_anonymous: anonymous, gateway_response: responseData,
-      },
+      metadata: { is_anonymous: anonymous },
     }).eq("id", donationId);
     if (updateError) throw updateError;
     return json({ donation_id: donationId, status: "pending", payment: responseData });
