@@ -50,7 +50,8 @@ export async function POST(request: Request) {
     });
     if (insertError) throw insertError;
 
-    const gatewayResponse = await fetch("https://elevapayments.live/api/v1/payments/pix", {
+    // Official Eleva Payments site documents this API base and Pix route.
+    const gatewayResponse = await fetch("https://elevapayments.squareweb.app/api/v1/payments/pix", {
       method: "POST",
       headers: {
         Authorization: "Bearer " + env("ELEVA_API_TOKEN"),
