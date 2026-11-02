@@ -56,8 +56,8 @@ export default function AdminPage() {
   const refresh = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const [u, c] = await Promise.all([callAdmin("listUsers"), callAdmin("listCampaigns")]);
-      setUsers(u.users ?? []); setCampaigns(c.campaigns ?? []); setAuthorized(true);
+      const [u, c, p] = await Promise.all([callAdmin("listUsers"), callAdmin("listCampaigns"), callAdmin("listPayments")]);
+      setUsers(u.users ?? []); setCampaigns(c.campaigns ?? []); setPayments(p.payments ?? []); setAuthorized(true);
     } catch (e) {
       const detail = e instanceof Error ? e.message : "Não foi possível carregar o painel.";
       setError(detail);
