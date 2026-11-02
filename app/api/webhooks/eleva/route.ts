@@ -56,10 +56,17 @@ export async function POST(request: Request) {
     if (existingEventError) throw existingEventError;
     if (existingEvent) return NextResponse.json({ ok: true, duplicate: true });
 
-    let query = supabase.from("donations").select("id,status").limit(1);
-    query = reference ? query.eq("id", reference) : query.eq("provider_payment_id", providerId);
-    const { data: donation, error: findError } = await query.maybeSingle();
-    if (findError) throw findError;
+    let donation: { id: string; status: string } | null = null;
+    if (reference) {
+      const { data, error } = await supabase.from("donations").select("id,status").eq("id", reference).maybeSingle();
+      if (error) throw error;
+      donation = data;
+    }
+    if (!donation && providerId) {
+      const { data, error } = await supabase.from("donations").select("id,status").eq("provider_payment_id", providerId).maybeSingle();
+      if (error) throw error;
+      donation = data;
+    }
     if (!donation) return NextResponse.json({ ok: true, ignored: true });
 
     let status: "pending" | "paid" | "failed" | "refunded" | null = null;
