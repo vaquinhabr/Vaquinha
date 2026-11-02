@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       donor_display_name: anonymous ? "Doador anônimo" : payerName,
       amount_cents: amountCents, currency: "BRL", status: "pending", provider: "eleva",
       provider_payment_id: null, idempotency_key: idempotencyKey, paid_at: null,
-      metadata: { payer_email: payerEmail, payer_cpf_last4: payerCpf.slice(-4), payer_phone: payerPhone || null, is_anonymous: anonymous },
+      metadata: { is_anonymous: anonymous },
     });
     if (insertError) throw insertError;
 
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     });
     const responseData = await gatewayResponse.json().catch(() => ({})) as Record<string, unknown>;
     if (!gatewayResponse.ok) {
-      await supabase.from("donations").update({ status: "failed", metadata: { gateway_error: responseData } }).eq("id", donationId);
+      await supabase.from("donations").update({ status: "failed", metadata: { gateway_error_code: "provider_rejected" } }).eq("id", donationId);
       return json({ error: "O gateway não conseguiu criar a cobrança Pix. Tente novamente." }, 502);
     }
 
