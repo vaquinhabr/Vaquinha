@@ -89,6 +89,24 @@ Deno.serve(async (req: Request) => {
       }, 200, origin);
     }
 
+    if (action === "listPayments") {
+      const { data: payments, error } = await admin
+        .from("donations")
+        .select("id,campaign_id,donor_display_name,amount_cents,currency,status,provider,provider_payment_id,paid_at,created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      const campaignIds = [...new Set((payments ?? []).map((p) => p.campaign_id).filter(Boolean))];
+      const { data: campaignRows, error: campaignError } = campaignIds.length
+        ? await admin.from("campaigns").select("id,title").in("id", campaignIds)
+        : { data: [], error: null };
+      if (campaignError) throw campaignError;
+      const titles = new Map((campaignRows ?? []).map((c) => [c.id, c.title]));
+      return response({
+        payments: (payments ?? []).map((p) => ({ ...p, campaign_title: titles.get(p.campaign_id) ?? "Campanha removida" })),
+      }, 200, origin);
+    }
+
     if (action === "updateCampaign") {
       const id = String(body.id ?? "");
       const fields: Record<string, unknown> = {};
