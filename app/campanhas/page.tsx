@@ -95,16 +95,16 @@ export default function Campanhas() {
           ) : (
             <section aria-label="Campanhas ativas" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 290px), 1fr))", gap: 20 }}>
               {(!busca.trim() || /alexandre|fernando|adrenoleucodistrofia|\bald\b/i.test(busca)) && (categoria === "todas" || categoria === "saude") && (
-                <a href="https://www.vakinha.com.br/vaquinha/irmaos-alexandre-e-fernando?utm_internal_source=em-destaque-quero-doar" target="_blank" rel="noopener noreferrer" className="card" style={{ overflow: "hidden", display: "block", textDecoration: "none" }}>
+                <Link href="/campanhas/irmaos-alexandre-e-fernando" className="card" style={{ overflow: "hidden", display: "block", textDecoration: "none" }}>
                   <div style={{ height: 174, background: "linear-gradient(135deg, #dcefe1, #f5ead4)", display: "grid", placeItems: "center" }}><span aria-hidden="true" style={{ fontSize: 54 }}>💚</span></div>
                   <div style={{ padding: 22 }}>
-                    <span style={{ color: "var(--green-800)", fontSize: 12, fontWeight: 700 }}>Saúde · Campanha externa</span>
+                    <span style={{ color: "var(--green-800)", fontSize: 12, fontWeight: 700 }}>Saúde</span>
                     <h2 style={{ fontSize: 20, lineHeight: 1.35, margin: "9px 0" }}>Irmãos Alexandre e Fernando</h2>
                     <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.65, margin: "0 0 18px" }}>Ajude a dar continuidade ao tratamento do Alexandre contra a adrenoleucodistrofia (ALD). A família busca apoio para que ele tenha mais qualidade de vida.</p>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 14, fontSize: 12, color: "var(--muted)" }}><span>Meta na Vakinha</span><strong style={{ color: "var(--green-900)" }}>R$ 600.000,00</strong></div>
-                    <span style={{ display: "inline-block", marginTop: 18, color: "var(--green-800)", fontSize: 14, fontWeight: 700 }}>Apoiar no site original ↗</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 14, fontSize: 12, color: "var(--muted)" }}><span>Meta da campanha</span><strong style={{ color: "var(--green-900)" }}>R$ 600.000,00</strong></div>
+                    <span style={{ display: "inline-block", marginTop: 18, color: "var(--green-800)", fontSize: 14, fontWeight: 700 }}>Conhecer a história →</span>
                   </div>
-                </a>
+                </Link>
               )}
               {campanhasFiltradas.map((c) => (
                 <Link key={c.id} href={`/campanhas/${c.slug || c.id}`} className="card" style={{ overflow: "hidden", display: "block", textDecoration: "none" }}>
