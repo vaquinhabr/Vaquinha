@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     if (!donation) return NextResponse.json({ ok: true, ignored: true });
 
     let status: "pending" | "paid" | "failed" | "refunded" | null = null;
-    if (eventName === "deposit.completed" || data.status === "completed") status = "paid";
+    if (eventName === "deposit.completed") status = "paid";
     else if (eventName === "transaction.waiting_payment") status = "pending";
     else if (eventName === "transaction.failed") status = "failed";
     else if (eventName === "transaction.refunded" || eventName === "transaction.chargeback") status = "refunded";
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     const { error: updateError } = await supabase.from("donations").update(update).eq("id", donation.id);
     if (updateError) throw updateError;
     const { error: eventInsertError } = await supabase.from("payment_webhook_events").insert({
-      id: uniqueEventId, event_type: eventName, payload,
+      id: uniqueEventId, event_type: eventName, payload: { reference, provider_id: providerId || null, status: data.status ?? null },
     });
     if (eventInsertError && eventInsertError.code !== "23505") throw eventInsertError;
     return NextResponse.json({ ok: true, duplicate: eventInsertError?.code === "23505" });
