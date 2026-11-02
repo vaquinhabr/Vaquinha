@@ -53,7 +53,7 @@ export default function DoarCampanhaPage() {
     event.preventDefault();
     setError("");
     if (!campaign) return;
-    const normalized = amount.trim().replace(/\./g, "").replace(",", ".");
+    const normalized = amount.trim().includes(",") ? amount.trim().replace(/\./g, "").replace(",", ".") : amount.trim();
     const value = Number(normalized);
     if (!Number.isFinite(value) || value < 1 || value > 1000000) {
       setError("Informe um valor entre R$ 1,00 e R$ 1.000.000,00.");
