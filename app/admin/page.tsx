@@ -34,7 +34,8 @@ export default function AdminPage() {
   const [editImageUrl, setEditImageUrl] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);\n  const [payments, setPayments] = useState<Payment[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState<boolean | null>(null);
