@@ -146,6 +146,6 @@ test("signup with email confirmation disabled opens the panel", async ({ page })
   await page.getByLabel("E-mail").fill("teste@example.com");
   await page.getByLabel("Crie uma senha").fill("SenhaSegura123");
   await page.getByRole("button", { name: /criar minha conta/i }).click();
-  await expect(page).toHaveURL(/\\/painel$/);
+  await expect(page).toHaveURL(/\/painel$/);
   await expect(page.getByRole("heading", { name: /olá,/i })).toBeVisible();
 });

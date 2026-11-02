@@ -8,6 +8,11 @@ type AdminUser = {
   id: string; email: string; name: string; created_at: string;
   email_confirmed_at: string | null; last_sign_in_at: string | null; banned_until: string | null;
 };
+type Payment = {
+  id: string; campaign_id: string; campaign_title: string; donor_display_name: string | null;
+  amount_cents: number; currency: string; status: string; provider: string | null;
+  provider_payment_id: string | null; paid_at: string | null; created_at: string;
+};
 type Campaign = {
   id: string; title: string; description: string; user_id: string; owner_name: string;
   status: "draft" | "pending_review" | "active" | "paused" | "completed" | "rejected";
@@ -21,7 +26,7 @@ const money = (value: number) => new Intl.NumberFormat("pt-BR", { style: "curren
 const date = (value: string | null) => value ? new Date(value).toLocaleDateString("pt-BR") : "—";
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<"users" | "campaigns">("users");
+  const [tab, setTab] = useState<"users" | "campaigns" | "payments">("users");
   const [editing, setEditing] = useState<Campaign | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -30,6 +35,7 @@ export default function AdminPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState<boolean | null>(null);
@@ -51,8 +57,8 @@ export default function AdminPage() {
   const refresh = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const [u, c] = await Promise.all([callAdmin("listUsers"), callAdmin("listCampaigns")]);
-      setUsers(u.users ?? []); setCampaigns(c.campaigns ?? []); setAuthorized(true);
+      const [u, c, p] = await Promise.all([callAdmin("listUsers"), callAdmin("listCampaigns"), callAdmin("listPayments")]);
+      setUsers(u.users ?? []); setCampaigns(c.campaigns ?? []); setPayments(p.payments ?? []); setAuthorized(true);
     } catch (e) {
       const detail = e instanceof Error ? e.message : "Não foi possível carregar o painel.";
       setError(detail);
@@ -134,6 +140,7 @@ export default function AdminPage() {
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => setTab("users")} style={tabStyle(tab === "users")}>Usuários</button>
               <button onClick={() => setTab("campaigns")} style={tabStyle(tab === "campaigns")}>Campanhas</button>
+              <button onClick={() => setTab("payments")} style={tabStyle(tab === "payments")}>Pagamentos</button>
             </div>
             <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar..." aria-label="Buscar usuários ou campanhas" style={{ ...inputStyle, maxWidth: 340 }} />
           </div>
@@ -160,7 +167,7 @@ export default function AdminPage() {
               </table>
               {!visibleUsers.length && <p>Nenhum usuário encontrado.</p>}
             </div>
-          ) : (
+          ) : tab === "campaigns" ? (
             <div style={{ overflowX: "auto" }}>
               <table style={tableStyle}>
                 <thead><tr><th style={thStyle}>Campanha</th><th style={thStyle}>Responsável</th><th style={thStyle}>Meta</th><th style={thStyle}>Arrecadado</th><th style={thStyle}>Status</th><th style={thStyle}>Ações</th></tr></thead>
@@ -176,6 +183,28 @@ export default function AdminPage() {
                 </tr>)}</tbody>
               </table>
               {!visibleCampaigns.length && <p>Nenhuma campanha encontrada.</p>}
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 16 }}>
+                <Stat label="Doações confirmadas" value={money(payments.filter(p => p.status === "paid").reduce((sum, p) => sum + Number(p.amount_cents || 0), 0) / 100)} />
+                <Stat label="Pendentes" value={String(payments.filter(p => p.status === "pending").length)} />
+                <Stat label="Falhas / estornos" value={String(payments.filter(p => ["failed", "refunded", "cancelled"].includes(p.status)).length)} />
+              </div>
+              <table style={tableStyle}>
+                <thead><tr><th style={thStyle}>Data</th><th style={thStyle}>Doador</th><th style={thStyle}>Campanha</th><th style={thStyle}>Valor</th><th style={thStyle}>Status</th><th style={thStyle}>Gateway / transação</th></tr></thead>
+                <tbody>{payments.filter(p => (p.campaign_title + " " + (p.donor_display_name || "") + " " + p.status + " " + (p.provider_payment_id || "")).toLowerCase().includes(query.toLowerCase())).map(p => (
+                  <tr key={p.id}>
+                    <td style={tdStyle}>{date(p.created_at)}</td>
+                    <td style={tdStyle}>{p.donor_display_name || "Doador"}</td>
+                    <td style={tdStyle}>{p.campaign_title}</td>
+                    <td style={tdStyle}>{money(Number(p.amount_cents || 0) / 100)}</td>
+                    <td style={tdStyle}>{p.status === "paid" ? "Confirmado" : p.status === "pending" ? "Pendente" : p.status === "refunded" ? "Estornado" : p.status === "cancelled" ? "Cancelado" : "Falhou"}</td>
+                    <td style={tdStyle}><strong>{p.provider || "—"}</strong><small style={smallStyle}>{p.provider_payment_id || p.id}</small></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+              {!payments.length && <p>Nenhum pagamento registrado ainda.</p>}
             </div>
           )}
           <p style={{ margin: "18px 0 0", color: "#718075", fontSize: 12 }}>Listagem limitada aos primeiros 1.000 usuários e 500 campanhas. A autorização é verificada no servidor em cada ação.</p>
