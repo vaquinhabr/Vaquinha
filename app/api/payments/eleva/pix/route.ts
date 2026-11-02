@@ -69,7 +69,18 @@ export async function POST(request: Request) {
     });
     const responseData = await gatewayResponse.json().catch(() => ({})) as Record<string, unknown>;
     if (!gatewayResponse.ok) {
-      await supabase.from("donations").update({ status: "failed", metadata: { gateway_error_code: "provider_rejected" } }).eq("id", donationId);
+      const providerError = responseData.error;
+      const providerCode = typeof responseData.code === "string" ? responseData.code : undefined;
+      console.error("Eleva Pix provider rejected request", {
+        httpStatus: gatewayResponse.status,
+        providerCode,
+        providerMessage: typeof providerError === "string"
+          ? providerError.slice(0, 200)
+          : providerError && typeof providerError === "object" && "message" in providerError && typeof providerError.message === "string"
+            ? providerError.message.slice(0, 200)
+            : typeof responseData.message === "string" ? responseData.message.slice(0, 200) : undefined,
+      });
+      await supabase.from("donations").update({ status: "failed", metadata: { gateway_error_code: "provider_rejected", gateway_http_status: gatewayResponse.status } }).eq("id", donationId);
       return json({ error: "O gateway não conseguiu criar a cobrança Pix. Tente novamente." }, 502);
     }
 
@@ -82,7 +93,15 @@ export async function POST(request: Request) {
     if (updateError) throw updateError;
     return json({ donation_id: donationId, status: "pending", payment: responseData });
   } catch (error) {
-    console.error("Eleva Pix creation failed", error instanceof Error ? error.message : "unknown error");
+    const detail = error instanceof Error
+      ? error.message
+      : error && typeof error === "object"
+        ? ["message", "code", "details", "hint"].map((key) => {
+            const value = (error as Record<string, unknown>)[key];
+            return typeof value === "string" ? key + "=" + value.slice(0, 200) : "";
+          }).filter(Boolean).join(" ")
+        : String(error);
+    console.error("Eleva Pix creation failed", detail.slice(0, 800) || "unknown error");
     return json({ error: "Não foi possível iniciar a doação. Verifique a configuração do servidor e tente novamente." }, 500);
   }
 }
